@@ -105,16 +105,16 @@ const MatchCounter = () => {
 
   return (
     <div className="h-full w-full flex flex-col relative">
-      {/* Header */}
-      <div className="flex justify-between items-center px-6 py-4 animate-fade-in">
+      {/* Header - Modified with responsive text sizes */}
+      <div className="flex justify-between items-center px-4 sm:px-6 py-3 sm:py-4 animate-fade-in">
         <h1 className={cn(
-          "text-2xl font-semibold text-white transform transition-all duration-300",
+          "text-lg sm:text-xl md:text-2xl font-semibold text-white transform transition-all duration-300",
           team1.stage === "buenas" ? "text-yellow-200" : "text-white"
         )}>
           Nosotros {team1.stage === "buenas" ? "(Buenas)" : "(Malas)"}
         </h1>
         <h1 className={cn(
-          "text-2xl font-semibold text-white transform transition-all duration-300",
+          "text-lg sm:text-xl md:text-2xl font-semibold text-white transform transition-all duration-300",
           team2.stage === "buenas" ? "text-yellow-200" : "text-white"
         )}>
           Ellos {team2.stage === "buenas" ? "(Buenas)" : "(Malas)"}
@@ -126,7 +126,7 @@ const MatchCounter = () => {
         <div className="h-full flex relative">
           {/* Team 1 Side */}
           <div 
-            className="w-1/2 p-4 flex flex-col space-y-2 relative overflow-hidden"
+            className="w-1/2 p-2 sm:p-4 flex flex-col space-y-2 relative overflow-hidden"
             onClick={() => incrementTeam("team1")}
           >
             {team1Squares.map((points, index) => (
@@ -153,7 +153,7 @@ const MatchCounter = () => {
 
           {/* Team 2 Side */}
           <div 
-            className="w-1/2 p-4 flex flex-col space-y-2 relative overflow-hidden"
+            className="w-1/2 p-2 sm:p-4 flex flex-col space-y-2 relative overflow-hidden"
             onClick={() => incrementTeam("team2")}
           >
             {team2Squares.map((points, index) => (
