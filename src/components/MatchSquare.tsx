@@ -35,21 +35,20 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
       <div 
         key="top" 
         className={cn(
-          "absolute w-full",
+          "absolute",
           mounted && "animate-match-appear"
         )}
         style={{
-          top: '-15px', 
+          top: '0', 
           left: '50%', 
-          transform: 'translateX(-50%) rotate(90deg)',
+          transform: 'translateX(-50%)',
           ...getDelayStyle(0)
         }}
       >
-        <img 
-          src="/lovable-uploads/43acf193-cb4e-40a0-a75f-4a3ebb5b90c3.png" 
-          alt="Match" 
-          className="h-24 w-auto"
-        />
+        <div className="relative">
+          <div className="w-[3px] h-[50px] bg-[#e9d8a6]"></div>
+          <div className="absolute top-0 w-[6px] h-[6px] rounded-full bg-[#e63946] transform -translate-x-1/2 left-1/2"></div>
+        </div>
       </div>
     );
   }
@@ -60,21 +59,20 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
       <div 
         key="right" 
         className={cn(
-          "absolute h-full",
+          "absolute",
           mounted && "animate-match-appear"
         )}
         style={{
           top: '50%', 
-          right: '-15px', 
-          transform: 'translateY(-50%) rotate(0deg)',
+          right: '10px', 
+          transform: 'translateY(-50%) rotate(90deg)',
           ...getDelayStyle(1)
         }}
       >
-        <img 
-          src="/lovable-uploads/43acf193-cb4e-40a0-a75f-4a3ebb5b90c3.png" 
-          alt="Match" 
-          className="h-24 w-auto"
-        />
+        <div className="relative">
+          <div className="w-[3px] h-[50px] bg-[#e9d8a6]"></div>
+          <div className="absolute top-0 w-[6px] h-[6px] rounded-full bg-[#e63946] transform -translate-x-1/2 left-1/2"></div>
+        </div>
       </div>
     );
   }
@@ -85,21 +83,20 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
       <div 
         key="bottom" 
         className={cn(
-          "absolute w-full",
+          "absolute",
           mounted && "animate-match-appear"
         )}
         style={{
-          bottom: '-15px', 
+          bottom: '0', 
           left: '50%', 
-          transform: 'translateX(-50%) rotate(90deg)',
+          transform: 'translateX(-50%)',
           ...getDelayStyle(2)
         }}
       >
-        <img 
-          src="/lovable-uploads/43acf193-cb4e-40a0-a75f-4a3ebb5b90c3.png" 
-          alt="Match" 
-          className="h-24 w-auto"
-        />
+        <div className="relative">
+          <div className="w-[3px] h-[50px] bg-[#e9d8a6]"></div>
+          <div className="absolute top-0 w-[6px] h-[6px] rounded-full bg-[#e63946] transform -translate-x-1/2 left-1/2"></div>
+        </div>
       </div>
     );
   }
@@ -110,21 +107,20 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
       <div 
         key="left" 
         className={cn(
-          "absolute h-full",
+          "absolute",
           mounted && "animate-match-appear"
         )}
         style={{
           top: '50%', 
-          left: '-15px', 
-          transform: 'translateY(-50%) rotate(0deg)',
+          left: '10px', 
+          transform: 'translateY(-50%) rotate(90deg)',
           ...getDelayStyle(3)
         }}
       >
-        <img 
-          src="/lovable-uploads/43acf193-cb4e-40a0-a75f-4a3ebb5b90c3.png" 
-          alt="Match" 
-          className="h-24 w-auto"
-        />
+        <div className="relative">
+          <div className="w-[3px] h-[50px] bg-[#e9d8a6]"></div>
+          <div className="absolute top-0 w-[6px] h-[6px] rounded-full bg-[#e63946] transform -translate-x-1/2 left-1/2"></div>
+        </div>
       </div>
     );
   }
@@ -145,11 +141,10 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
           ...getDelayStyle(4)
         }}
       >
-        <img 
-          src="/lovable-uploads/43acf193-cb4e-40a0-a75f-4a3ebb5b90c3.png" 
-          alt="Match" 
-          className="h-24 w-auto"
-        />
+        <div className="relative">
+          <div className="w-[3px] h-[50px] bg-[#e9d8a6]"></div>
+          <div className="absolute top-0 w-[6px] h-[6px] rounded-full bg-[#e63946] transform -translate-x-1/2 left-1/2"></div>
+        </div>
       </div>
     );
   }
