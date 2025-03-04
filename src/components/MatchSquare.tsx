@@ -26,24 +26,6 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
     };
   };
 
-  // SVG rotation constants for matchstick positions
-  const rotations = {
-    top: "rotate(90deg)",
-    right: "rotate(0deg)",
-    bottom: "rotate(90deg)",
-    left: "rotate(0deg)",
-    diagonal: "rotate(45deg)"
-  };
-
-  // SVG positioning constants for the matchsticks
-  const positions = {
-    top: { top: '-5px', left: '50%', transform: `translateX(-50%) ${rotations.top}` },
-    right: { top: '50%', right: '-5px', transform: `translateY(-50%) ${rotations.right}` },
-    bottom: { bottom: '-5px', left: '50%', transform: `translateX(-50%) ${rotations.bottom}` },
-    left: { top: '50%', left: '-5px', transform: `translateY(-50%) ${rotations.left}` },
-    diagonal: { top: '50%', left: '50%', transform: `translate(-50%, -50%) ${rotations.diagonal}` }
-  };
-
   // Create matches based on points
   const matchElements = [];
   
@@ -57,14 +39,16 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
           mounted && "animate-match-appear"
         )}
         style={{
-          ...positions.top,
+          top: '-5px', 
+          left: '50%', 
+          transform: 'translateX(-50%) rotate(90deg)',
           ...getDelayStyle(0)
         }}
       >
         <img 
           src="/match.svg" 
           alt="Match" 
-          className="h-20 w-6"
+          className="h-20 w-10"
         />
       </div>
     );
@@ -80,14 +64,16 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
           mounted && "animate-match-appear"
         )}
         style={{
-          ...positions.right,
+          top: '50%', 
+          right: '-5px', 
+          transform: 'translateY(-50%) rotate(0deg)',
           ...getDelayStyle(1)
         }}
       >
         <img 
           src="/match.svg" 
           alt="Match" 
-          className="h-20 w-6"
+          className="h-20 w-10"
         />
       </div>
     );
@@ -103,14 +89,16 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
           mounted && "animate-match-appear"
         )}
         style={{
-          ...positions.bottom,
+          bottom: '-5px', 
+          left: '50%', 
+          transform: 'translateX(-50%) rotate(90deg)',
           ...getDelayStyle(2)
         }}
       >
         <img 
           src="/match.svg" 
           alt="Match" 
-          className="h-20 w-6"
+          className="h-20 w-10"
         />
       </div>
     );
@@ -126,14 +114,16 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
           mounted && "animate-match-appear"
         )}
         style={{
-          ...positions.left,
+          top: '50%', 
+          left: '-5px', 
+          transform: 'translateY(-50%) rotate(0deg)',
           ...getDelayStyle(3)
         }}
       >
         <img 
           src="/match.svg" 
           alt="Match" 
-          className="h-20 w-6"
+          className="h-20 w-10"
         />
       </div>
     );
@@ -149,14 +139,16 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
           mounted && "animate-match-appear"
         )}
         style={{
-          ...positions.diagonal,
+          top: '50%', 
+          left: '50%', 
+          transform: 'translate(-50%, -50%) rotate(45deg)',
           ...getDelayStyle(4)
         }}
       >
         <img 
           src="/match.svg" 
           alt="Match" 
-          className="h-20 w-6"
+          className="h-20 w-10"
         />
       </div>
     );
