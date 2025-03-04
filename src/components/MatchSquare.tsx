@@ -39,16 +39,16 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
           mounted && "animate-match-appear"
         )}
         style={{
-          top: '-5px', 
+          top: '-15px', 
           left: '50%', 
           transform: 'translateX(-50%) rotate(90deg)',
           ...getDelayStyle(0)
         }}
       >
         <img 
-          src="/match.svg" 
+          src="/lovable-uploads/43acf193-cb4e-40a0-a75f-4a3ebb5b90c3.png" 
           alt="Match" 
-          className="h-20 w-10"
+          className="h-24 w-auto"
         />
       </div>
     );
@@ -65,15 +65,15 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
         )}
         style={{
           top: '50%', 
-          right: '-5px', 
+          right: '-15px', 
           transform: 'translateY(-50%) rotate(0deg)',
           ...getDelayStyle(1)
         }}
       >
         <img 
-          src="/match.svg" 
+          src="/lovable-uploads/43acf193-cb4e-40a0-a75f-4a3ebb5b90c3.png" 
           alt="Match" 
-          className="h-20 w-10"
+          className="h-24 w-auto"
         />
       </div>
     );
@@ -89,16 +89,16 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
           mounted && "animate-match-appear"
         )}
         style={{
-          bottom: '-5px', 
+          bottom: '-15px', 
           left: '50%', 
           transform: 'translateX(-50%) rotate(90deg)',
           ...getDelayStyle(2)
         }}
       >
         <img 
-          src="/match.svg" 
+          src="/lovable-uploads/43acf193-cb4e-40a0-a75f-4a3ebb5b90c3.png" 
           alt="Match" 
-          className="h-20 w-10"
+          className="h-24 w-auto"
         />
       </div>
     );
@@ -115,15 +115,15 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
         )}
         style={{
           top: '50%', 
-          left: '-5px', 
+          left: '-15px', 
           transform: 'translateY(-50%) rotate(0deg)',
           ...getDelayStyle(3)
         }}
       >
         <img 
-          src="/match.svg" 
+          src="/lovable-uploads/43acf193-cb4e-40a0-a75f-4a3ebb5b90c3.png" 
           alt="Match" 
-          className="h-20 w-10"
+          className="h-24 w-auto"
         />
       </div>
     );
@@ -146,9 +146,9 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
         }}
       >
         <img 
-          src="/match.svg" 
+          src="/lovable-uploads/43acf193-cb4e-40a0-a75f-4a3ebb5b90c3.png" 
           alt="Match" 
-          className="h-20 w-10"
+          className="h-24 w-auto"
         />
       </div>
     );
