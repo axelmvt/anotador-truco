@@ -110,6 +110,10 @@ export default {
 				'pulse-gentle': {
 					'0%, 100%': { transform: 'scale(1)' },
 					'50%': { transform: 'scale(1.05)' }
+				},
+				'glow': {
+					'0%, 100%': { boxShadow: '0 0 5px rgba(253, 184, 51, 0.4)' },
+					'50%': { boxShadow: '0 0 15px rgba(253, 184, 51, 0.8)' }
 				}
 			},
 			animation: {
@@ -119,7 +123,8 @@ export default {
 				'match-disappear': 'match-disappear 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
 				'fade-in': 'fade-in 0.5s ease-out',
 				'slide-in': 'slide-in 0.5s ease-out',
-				'pulse-gentle': 'pulse-gentle 2s ease-in-out infinite'
+				'pulse-gentle': 'pulse-gentle 2s ease-in-out infinite',
+				'glow': 'glow 2s ease-in-out infinite'
 			},
 			fontFamily: {
 				sans: ['Inter', 'sans-serif'],
