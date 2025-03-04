@@ -39,15 +39,15 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
           mounted && "animate-match-appear"
         )}
         style={{
-          top: '0', 
+          top: '-20px', 
           left: '50%', 
           transform: 'translateX(-50%)',
           ...getDelayStyle(0)
         }}
       >
         <div className="relative">
-          <div className="w-[3px] h-[50px] bg-[#e9d8a6]"></div>
-          <div className="absolute top-0 w-[6px] h-[6px] rounded-full bg-[#e63946] transform -translate-x-1/2 left-1/2"></div>
+          <div className="w-[4px] h-[80px] bg-[#e9d8a6]"></div>
+          <div className="absolute top-0 w-[10px] h-[10px] rounded-full bg-[#e63946] transform -translate-x-1/2 left-1/2"></div>
         </div>
       </div>
     );
@@ -64,14 +64,14 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
         )}
         style={{
           top: '50%', 
-          right: '10px', 
+          right: '-20px', 
           transform: 'translateY(-50%) rotate(90deg)',
           ...getDelayStyle(1)
         }}
       >
         <div className="relative">
-          <div className="w-[3px] h-[50px] bg-[#e9d8a6]"></div>
-          <div className="absolute top-0 w-[6px] h-[6px] rounded-full bg-[#e63946] transform -translate-x-1/2 left-1/2"></div>
+          <div className="w-[4px] h-[80px] bg-[#e9d8a6]"></div>
+          <div className="absolute top-0 w-[10px] h-[10px] rounded-full bg-[#e63946] transform -translate-x-1/2 left-1/2"></div>
         </div>
       </div>
     );
@@ -87,15 +87,15 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
           mounted && "animate-match-appear"
         )}
         style={{
-          bottom: '0', 
+          bottom: '-20px', 
           left: '50%', 
           transform: 'translateX(-50%)',
           ...getDelayStyle(2)
         }}
       >
         <div className="relative">
-          <div className="w-[3px] h-[50px] bg-[#e9d8a6]"></div>
-          <div className="absolute top-0 w-[6px] h-[6px] rounded-full bg-[#e63946] transform -translate-x-1/2 left-1/2"></div>
+          <div className="w-[4px] h-[80px] bg-[#e9d8a6]"></div>
+          <div className="absolute top-0 w-[10px] h-[10px] rounded-full bg-[#e63946] transform -translate-x-1/2 left-1/2"></div>
         </div>
       </div>
     );
@@ -112,14 +112,14 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
         )}
         style={{
           top: '50%', 
-          left: '10px', 
+          left: '-20px', 
           transform: 'translateY(-50%) rotate(90deg)',
           ...getDelayStyle(3)
         }}
       >
         <div className="relative">
-          <div className="w-[3px] h-[50px] bg-[#e9d8a6]"></div>
-          <div className="absolute top-0 w-[6px] h-[6px] rounded-full bg-[#e63946] transform -translate-x-1/2 left-1/2"></div>
+          <div className="w-[4px] h-[80px] bg-[#e9d8a6]"></div>
+          <div className="absolute top-0 w-[10px] h-[10px] rounded-full bg-[#e63946] transform -translate-x-1/2 left-1/2"></div>
         </div>
       </div>
     );
@@ -142,15 +142,15 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
         }}
       >
         <div className="relative">
-          <div className="w-[3px] h-[50px] bg-[#e9d8a6]"></div>
-          <div className="absolute top-0 w-[6px] h-[6px] rounded-full bg-[#e63946] transform -translate-x-1/2 left-1/2"></div>
+          <div className="w-[4px] h-[80px] bg-[#e9d8a6]"></div>
+          <div className="absolute top-0 w-[10px] h-[10px] rounded-full bg-[#e63946] transform -translate-x-1/2 left-1/2"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="aspect-square w-full relative match-square">
+    <div className="aspect-square w-full relative match-square min-h-[100px]">
       {matchElements}
     </div>
   );
