@@ -1,0 +1,75 @@
+
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="40"
+   height="300"
+   id="svg2"
+   sodipodi:version="0.32"
+   inkscape:version="0.45.1"
+   version="1.0"
+   sodipodi:docbase="C:\Documents and Settings\LO STUDIO\Desktop"
+   sodipodi:docname="match.svg"
+   inkscape:output_extension="org.inkscape.output.svg.inkscape">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     gridtolerance="10000"
+     guidetolerance="10"
+     objecttolerance="10"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.979899"
+     inkscape:cx="99.270951"
+     inkscape:cy="134.4764"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     width="40px"
+     height="300px"
+     inkscape:window-width="1280"
+     inkscape:window-height="782"
+     inkscape:window-x="-4"
+     inkscape:window-y="-4"
+     showgrid="false" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Livello 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g3282">
+      <rect
+         y="64.255867"
+         x="15.035895"
+         height="232.16281"
+         width="9.9281387"
+         id="rect2160"
+         style="fill:#daa520;fill-opacity:1;stroke:#554400;stroke-width:0.71000004;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <path
+         sodipodi:nodetypes="czzzzzzzzc"
+         id="path2162"
+         d="M 15.035895,64.255867 C 15.035895,45.75242 14.530366,21.873434 15.035895,21.873434 C 15.541423,21.873434 18.076378,17.433406 20.105968,17.433406 C 22.135555,17.433406 24.67051,21.873434 25.176041,21.873434 C 25.681569,21.873434 24.964034,45.75242 24.964034,64.255867 L 24.964034,67.62622 L 19.999964,71.000001 L 15.035895,67.62622 L 15.035895,64.255867 z "
+         style="fill:#ff0000;fill-opacity:1;stroke:#554400;stroke-width:0.71000004;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    </g>
+  </g>
+</svg>

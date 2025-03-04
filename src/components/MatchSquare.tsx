@@ -26,6 +26,24 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
     };
   };
 
+  // SVG rotation constants for matchstick positions
+  const rotations = {
+    top: "rotate(90deg)",
+    right: "rotate(0deg)",
+    bottom: "rotate(90deg)",
+    left: "rotate(0deg)",
+    diagonal: "rotate(45deg)"
+  };
+
+  // SVG positioning constants for the matchsticks
+  const positions = {
+    top: { top: '-5px', left: '50%', transform: `translateX(-50%) ${rotations.top}` },
+    right: { top: '50%', right: '-5px', transform: `translateY(-50%) ${rotations.right}` },
+    bottom: { bottom: '-5px', left: '50%', transform: `translateX(-50%) ${rotations.bottom}` },
+    left: { top: '50%', left: '-5px', transform: `translateY(-50%) ${rotations.left}` },
+    diagonal: { top: '50%', left: '50%', transform: `translate(-50%, -50%) ${rotations.diagonal}` }
+  };
+
   // Create matches based on points
   const matchElements = [];
   
@@ -35,12 +53,19 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
       <div 
         key="top" 
         className={cn(
-          "match-stick h-3 w-full rounded-full absolute top-0",
+          "absolute w-full",
           mounted && "animate-match-appear"
         )}
-        style={getDelayStyle(0)}
+        style={{
+          ...positions.top,
+          ...getDelayStyle(0)
+        }}
       >
-        <div className="match-head absolute left-1/2 top-0 w-5 h-5 rounded-full -translate-x-1/2 -translate-y-1/2" />
+        <img 
+          src="/match.svg" 
+          alt="Match" 
+          className="h-20 w-6"
+        />
       </div>
     );
   }
@@ -51,12 +76,19 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
       <div 
         key="right" 
         className={cn(
-          "match-stick w-3 h-full rounded-full absolute right-0",
+          "absolute h-full",
           mounted && "animate-match-appear"
         )}
-        style={getDelayStyle(1)}
+        style={{
+          ...positions.right,
+          ...getDelayStyle(1)
+        }}
       >
-        <div className="match-head absolute top-1/2 right-0 w-5 h-5 rounded-full translate-x-1/2 -translate-y-1/2" />
+        <img 
+          src="/match.svg" 
+          alt="Match" 
+          className="h-20 w-6"
+        />
       </div>
     );
   }
@@ -67,12 +99,19 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
       <div 
         key="bottom" 
         className={cn(
-          "match-stick h-3 w-full rounded-full absolute bottom-0",
+          "absolute w-full",
           mounted && "animate-match-appear"
         )}
-        style={getDelayStyle(2)}
+        style={{
+          ...positions.bottom,
+          ...getDelayStyle(2)
+        }}
       >
-        <div className="match-head absolute left-1/2 bottom-0 w-5 h-5 rounded-full -translate-x-1/2 translate-y-1/2" />
+        <img 
+          src="/match.svg" 
+          alt="Match" 
+          className="h-20 w-6"
+        />
       </div>
     );
   }
@@ -83,12 +122,19 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
       <div 
         key="left" 
         className={cn(
-          "match-stick w-3 h-full rounded-full absolute left-0",
+          "absolute h-full",
           mounted && "animate-match-appear"
         )}
-        style={getDelayStyle(3)}
+        style={{
+          ...positions.left,
+          ...getDelayStyle(3)
+        }}
       >
-        <div className="match-head absolute top-1/2 left-0 w-5 h-5 rounded-full -translate-x-1/2 -translate-y-1/2" />
+        <img 
+          src="/match.svg" 
+          alt="Match" 
+          className="h-20 w-6"
+        />
       </div>
     );
   }
@@ -99,13 +145,19 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
       <div 
         key="diagonal"
         className={cn(
-          "match-stick h-3 w-[140%] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 origin-center",
-          "rotate-45 rounded-full",
+          "absolute",
           mounted && "animate-match-appear"
         )}
-        style={getDelayStyle(4)}
+        style={{
+          ...positions.diagonal,
+          ...getDelayStyle(4)
+        }}
       >
-        <div className="match-head absolute right-0 w-5 h-5 rounded-full translate-x-1/2 -translate-y-1/2" />
+        <img 
+          src="/match.svg" 
+          alt="Match" 
+          className="h-20 w-6"
+        />
       </div>
     );
   }
