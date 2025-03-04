@@ -105,20 +105,24 @@ const MatchCounter = () => {
 
   return (
     <div className="h-full w-full flex flex-col relative">
-      {/* Header - Modified with responsive text sizes */}
+      {/* Header - Modified with responsive text sizes and centered text */}
       <div className="flex justify-between items-center px-4 sm:px-6 py-3 sm:py-4 animate-fade-in">
-        <h1 className={cn(
-          "text-lg sm:text-xl md:text-2xl font-semibold text-white transform transition-all duration-300",
-          team1.stage === "buenas" ? "text-yellow-200" : "text-white"
-        )}>
-          Nosotros {team1.stage === "buenas" ? "(Buenas)" : "(Malas)"}
-        </h1>
-        <h1 className={cn(
-          "text-lg sm:text-xl md:text-2xl font-semibold text-white transform transition-all duration-300",
-          team2.stage === "buenas" ? "text-yellow-200" : "text-white"
-        )}>
-          Ellos {team2.stage === "buenas" ? "(Buenas)" : "(Malas)"}
-        </h1>
+        <div className="w-1/2 flex justify-center">
+          <h1 className={cn(
+            "text-lg sm:text-xl md:text-2xl font-semibold text-white transform transition-all duration-300 text-center",
+            team1.stage === "buenas" ? "text-yellow-200" : "text-white"
+          )}>
+            Nosotros {team1.stage === "buenas" ? "(Buenas)" : "(Malas)"}
+          </h1>
+        </div>
+        <div className="w-1/2 flex justify-center">
+          <h1 className={cn(
+            "text-lg sm:text-xl md:text-2xl font-semibold text-white transform transition-all duration-300 text-center",
+            team2.stage === "buenas" ? "text-yellow-200" : "text-white"
+          )}>
+            Ellos {team2.stage === "buenas" ? "(Buenas)" : "(Malas)"}
+          </h1>
+        </div>
       </div>
 
       {/* Game Board */}
