@@ -164,40 +164,49 @@ const MatchCounter = () => {
                 isAnimated={true}
               />
             ))}
-            <div 
-              className="absolute bottom-2 right-2 p-2 bg-black/10 rounded-full" 
-              onClick={(e) => {
-                e.stopPropagation();
-                decrementTeam("team2");
-              }}
-            >
-              <span className="text-white text-2xl font-bold">-</span>
+            {/* Control buttons for Team 2 - Reposicionados */}
+            <div className="absolute right-2 bottom-2 flex flex-col gap-3 items-end">
+              {/* Settings Button */}
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-12 w-12 mb-2 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-all"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowControls(!showControls);
+                }}
+              >
+                <Settings className="h-6 w-6" />
+              </Button>
+              
+              {/* Reset Button (shows when controls are visible) */}
+              {showControls && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-12 w-12 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-all animate-fade-in"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    resetGame();
+                  }}
+                >
+                  <RefreshCcw className="h-6 w-6" />
+                </Button>
+              )}
+              
+              {/* Minus Button */}
+              <div 
+                className="h-12 w-12 flex items-center justify-center rounded-full bg-black/10 hover:bg-black/20 transition-all" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  decrementTeam("team2");
+                }}
+              >
+                <span className="text-white text-2xl font-bold">-</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Control buttons */}
-      <div className="absolute bottom-6 right-6 flex flex-col gap-3">
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-12 w-12 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-all"
-          onClick={() => setShowControls(!showControls)}
-        >
-          <Settings className="h-6 w-6" />
-        </Button>
-        
-        {showControls && (
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-12 w-12 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-all animate-fade-in"
-            onClick={resetGame}
-          >
-            <RefreshCcw className="h-6 w-6" />
-          </Button>
-        )}
       </div>
     </div>
   );
