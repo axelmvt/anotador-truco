@@ -151,7 +151,7 @@ const MatchCounter = () => {
           <div 
             className={cn(
               "w-1/2 p-2 sm:p-4 flex flex-col space-y-2 relative overflow-hidden",
-              gameEnded && "pointer-events-none opacity-90"
+              gameEnded && "opacity-90"
             )}
             onClick={() => incrementTeam("team1")}
           >
@@ -181,7 +181,7 @@ const MatchCounter = () => {
           <div 
             className={cn(
               "w-1/2 p-2 sm:p-4 flex flex-col space-y-2 relative overflow-hidden",
-              gameEnded && "pointer-events-none opacity-90"
+              gameEnded && "opacity-90"
             )}
             onClick={() => incrementTeam("team2")}
           >
@@ -194,7 +194,7 @@ const MatchCounter = () => {
               />
             ))}
             {/* Control buttons for Team 2 - Reposicionados */}
-            <div className="absolute right-2 bottom-2 flex flex-col gap-3 items-end z-10">
+            <div className="absolute right-2 bottom-2 flex flex-col gap-3 items-end z-30">
               {/* Settings Button */}
               <Button
                 variant="outline"
@@ -214,8 +214,8 @@ const MatchCounter = () => {
                   variant="outline"
                   size="icon"
                   className={cn(
-                    "h-12 w-12 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-all animate-fade-in",
-                    gameEnded && "bg-red-500/30 hover:bg-red-500/50"
+                    "h-12 w-12 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-all animate-fade-in z-50",
+                    gameEnded && "bg-red-500/60 hover:bg-red-500/80 scale-110"
                   )}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -244,11 +244,22 @@ const MatchCounter = () => {
       {/* Overlay for game ended */}
       {gameEnded && (
         <div 
-          className="absolute inset-0 bg-black/5 pointer-events-none flex items-center justify-center z-0"
+          className="absolute inset-0 bg-black/5 pointer-events-none flex items-center justify-center z-20"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="bg-red-500/20 px-8 py-4 rounded-lg backdrop-blur-sm">
             <p className="text-white text-lg font-bold">Partida finalizada</p>
+            <Button
+              variant="outline"
+              size="lg"
+              className="mt-3 bg-white/10 hover:bg-white/20 border-none text-white w-full pointer-events-auto"
+              onClick={(e) => {
+                e.stopPropagation();
+                resetGame();
+              }}
+            >
+              Reiniciar Partida
+            </Button>
           </div>
         </div>
       )}
