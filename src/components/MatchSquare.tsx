@@ -137,6 +137,7 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
         style={{
           top: '50%', 
           left: '5%',
+          transformOrigin: 'center',
           boxShadow: '0 0 5px rgba(253, 184, 51, 0.6)'
         }}
       >
@@ -147,7 +148,9 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
 
   return (
     <div className="aspect-square w-full relative match-square min-h-[100px] md:min-h-[150px] border-2 border-[#FDB833]/50 rounded-lg overflow-hidden">
-      {matchElements}
+      <div className="w-full h-full absolute">
+        {matchElements}
+      </div>
     </div>
   );
 };
