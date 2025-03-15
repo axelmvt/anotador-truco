@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 interface MatchSquareProps {
   points: number;
@@ -9,12 +9,23 @@ interface MatchSquareProps {
 
 const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps) => {
   const [mounted, setMounted] = useState(false);
+  const prevPointsRef = useRef(0);
   
   useEffect(() => {
     if (isAnimated) {
       setMounted(true);
     }
   }, [isAnimated]);
+  
+  // Determinar si un punto específico es nuevo (para animar solo el nuevo)
+  const isNewPoint = (index: number) => {
+    return isAnimated && index >= prevPointsRef.current;
+  };
+  
+  // Actualizar la referencia después del renderizado
+  useEffect(() => {
+    prevPointsRef.current = points;
+  }, [points]);
 
   // Function to delay animations for a staggered effect
   const getDelayStyle = (index: number) => {
@@ -35,7 +46,7 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
         key="top" 
         className={cn(
           "absolute h-2 bg-[#FDB833] w-3/4 rounded-full",
-          mounted && "animate-match-appear"
+          isNewPoint(0) && "animate-match-appear"
         )}
         style={{
           top: '10%', 
@@ -56,7 +67,7 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
         key="right" 
         className={cn(
           "absolute w-2 bg-[#FDB833] h-3/4 rounded-full",
-          mounted && "animate-match-appear"
+          isNewPoint(1) && "animate-match-appear"
         )}
         style={{
           top: '12.5%', 
@@ -77,7 +88,7 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
         key="bottom" 
         className={cn(
           "absolute h-2 bg-[#FDB833] w-3/4 rounded-full",
-          mounted && "animate-match-appear"
+          isNewPoint(2) && "animate-match-appear"
         )}
         style={{
           bottom: '10%', 
@@ -98,7 +109,7 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
         key="left" 
         className={cn(
           "absolute w-2 bg-[#FDB833] h-3/4 rounded-full",
-          mounted && "animate-match-appear"
+          isNewPoint(3) && "animate-match-appear"
         )}
         style={{
           top: '12.5%', 
@@ -112,14 +123,14 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
     );
   }
   
-  // Diagonal match - corregido para que aparezca directamente en la posición diagonal
+  // Diagonal match - con animación mejorada
   if (points >= 5) {
     matchElements.push(
       <div 
         key="diagonal"
         className={cn(
           "absolute h-2 bg-[#FDB833] w-[90%] rounded-full origin-center rotate-45",
-          mounted && "animate-match-fade"
+          isNewPoint(4) && "animate-match-fade"
         )}
         style={{
           top: '50%', 
