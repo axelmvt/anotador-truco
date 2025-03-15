@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef } from "react";
 
 interface MatchSquareProps {
   points: number;
@@ -8,34 +8,49 @@ interface MatchSquareProps {
 }
 
 const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps) => {
-  const [animatedPoints, setAnimatedPoints] = useState<number[]>([]);
+  // Referencias a los elementos DOM para aplicar animaciones directamente
+  const matchRefs = {
+    top: useRef<HTMLDivElement>(null),
+    right: useRef<HTMLDivElement>(null),
+    bottom: useRef<HTMLDivElement>(null),
+    left: useRef<HTMLDivElement>(null),
+    diagonal: useRef<HTMLDivElement>(null)
+  };
+  
+  // Registrar cuántos puntos se han mostrado anteriormente
   const prevPointsRef = useRef(0);
   
-  // Determinar si un punto específico necesita ser animado
-  const shouldAnimate = (pointPosition: number) => {
-    if (!isAnimated) return false;
-    // Solo animar si es un punto nuevo y no ha sido animado antes
-    return pointPosition === prevPointsRef.current && !animatedPoints.includes(pointPosition);
-  };
-  
-  // Gestionar la actualización de puntos
+  // Aplicar animaciones solo a los nuevos elementos cuando cambian los puntos
   useEffect(() => {
+    if (!isAnimated) return;
+    
+    // Solo animar elementos nuevos
     if (points > prevPointsRef.current) {
-      // Si se ha añadido un nuevo punto, marcarlo para animar
-      setAnimatedPoints(prev => [...prev, prevPointsRef.current]);
+      // Determinar qué elementos son nuevos
+      for (let i = prevPointsRef.current + 1; i <= points; i++) {
+        switch (i) {
+          case 1:
+            matchRefs.top.current?.classList.add("animate-match-manual");
+            break;
+          case 2:
+            matchRefs.right.current?.classList.add("animate-match-manual");
+            break;
+          case 3:
+            matchRefs.bottom.current?.classList.add("animate-match-manual");
+            break;
+          case 4:
+            matchRefs.left.current?.classList.add("animate-match-manual");
+            break;
+          case 5:
+            matchRefs.diagonal.current?.classList.add("animate-match-manual");
+            break;
+        }
+      }
     }
-    // Actualizar la referencia al número actual de puntos
+    
+    // Actualizar el contador de puntos previos
     prevPointsRef.current = points;
-  }, [points]);
-
-  // Function to delay animations for a staggered effect
-  const getDelayStyle = (index: number) => {
-    if (!isAnimated) return {};
-    const baseDelay = 0.05;
-    return {
-      animationDelay: `${baseDelay * index}s`
-    };
-  };
+  }, [points, isAnimated]);
 
   // Create matches based on points
   const matchElements = [];
@@ -44,16 +59,13 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
   if (points >= 1) {
     matchElements.push(
       <div 
+        ref={matchRefs.top}
         key="top" 
-        className={cn(
-          "absolute h-2 bg-[#FDB833] w-3/4 rounded-full",
-          shouldAnimate(1) && "animate-match-appear"
-        )}
+        className="absolute h-2 bg-[#FDB833] w-3/4 rounded-full"
         style={{
           top: '10%', 
           left: '12.5%',
-          boxShadow: '0 0 5px rgba(253, 184, 51, 0.6)',
-          ...getDelayStyle(0)
+          boxShadow: '0 0 5px rgba(253, 184, 51, 0.6)'
         }}
       >
         <div className="absolute top-1/2 left-0 transform -translate-y-1/2 w-3 h-3 rounded-full bg-[#e63946]" />
@@ -65,16 +77,13 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
   if (points >= 2) {
     matchElements.push(
       <div 
+        ref={matchRefs.right}
         key="right" 
-        className={cn(
-          "absolute w-2 bg-[#FDB833] h-3/4 rounded-full",
-          shouldAnimate(2) && "animate-match-appear"
-        )}
+        className="absolute w-2 bg-[#FDB833] h-3/4 rounded-full"
         style={{
           top: '12.5%', 
           right: '10%',
-          boxShadow: '0 0 5px rgba(253, 184, 51, 0.6)',
-          ...getDelayStyle(1)
+          boxShadow: '0 0 5px rgba(253, 184, 51, 0.6)'
         }}
       >
         <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-3 h-3 rounded-full bg-[#e63946]" />
@@ -86,16 +95,13 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
   if (points >= 3) {
     matchElements.push(
       <div 
+        ref={matchRefs.bottom}
         key="bottom" 
-        className={cn(
-          "absolute h-2 bg-[#FDB833] w-3/4 rounded-full",
-          shouldAnimate(3) && "animate-match-appear"
-        )}
+        className="absolute h-2 bg-[#FDB833] w-3/4 rounded-full"
         style={{
           bottom: '10%', 
           left: '12.5%',
-          boxShadow: '0 0 5px rgba(253, 184, 51, 0.6)',
-          ...getDelayStyle(2)
+          boxShadow: '0 0 5px rgba(253, 184, 51, 0.6)'
         }}
       >
         <div className="absolute top-1/2 left-0 transform -translate-y-1/2 w-3 h-3 rounded-full bg-[#e63946]" />
@@ -107,16 +113,13 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
   if (points >= 4) {
     matchElements.push(
       <div 
+        ref={matchRefs.left}
         key="left" 
-        className={cn(
-          "absolute w-2 bg-[#FDB833] h-3/4 rounded-full",
-          shouldAnimate(4) && "animate-match-appear"
-        )}
+        className="absolute w-2 bg-[#FDB833] h-3/4 rounded-full"
         style={{
           top: '12.5%', 
           left: '10%',
-          boxShadow: '0 0 5px rgba(253, 184, 51, 0.6)',
-          ...getDelayStyle(3)
+          boxShadow: '0 0 5px rgba(253, 184, 51, 0.6)'
         }}
       >
         <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-3 h-3 rounded-full bg-[#e63946]" />
@@ -124,20 +127,17 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
     );
   }
   
-  // Diagonal match - con animación mejorada
+  // Diagonal match
   if (points >= 5) {
     matchElements.push(
       <div 
+        ref={matchRefs.diagonal}
         key="diagonal"
-        className={cn(
-          "absolute h-2 bg-[#FDB833] w-[90%] rounded-full origin-center rotate-45",
-          shouldAnimate(5) && "animate-match-fade"
-        )}
+        className="absolute h-2 bg-[#FDB833] w-[90%] rounded-full origin-center rotate-45"
         style={{
           top: '50%', 
           left: '5%',
-          boxShadow: '0 0 5px rgba(253, 184, 51, 0.6)',
-          ...getDelayStyle(4)
+          boxShadow: '0 0 5px rgba(253, 184, 51, 0.6)'
         }}
       >
         <div className="absolute top-1/2 left-0 transform -translate-y-1/2 w-3 h-3 rounded-full bg-[#e63946]" />

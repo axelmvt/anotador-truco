@@ -98,6 +98,10 @@ export default {
 					'0%': { opacity: '0' },
 					'100%': { opacity: '1' }
 				},
+				'match-manual': {
+					'0%': { opacity: '0' },
+					'100%': { opacity: '1' }
+				},
 				'match-disappear': {
 					'0%': { opacity: '1', transform: 'scale(1)' },
 					'100%': { opacity: '0', transform: 'scale(0.8)' }
@@ -124,6 +128,7 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'match-appear': 'match-appear 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
 				'match-fade': 'match-fade 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+				'match-manual': 'match-manual 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
 				'match-disappear': 'match-disappear 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
 				'fade-in': 'fade-in 0.5s ease-out',
 				'slide-in': 'slide-in 0.5s ease-out',
