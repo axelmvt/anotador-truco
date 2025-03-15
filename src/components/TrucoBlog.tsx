@@ -39,9 +39,9 @@ const TrucoBlog = () => {
           <li>Tres de cualquier palo</li>
           <li>Dos de cualquier palo</li>
           <li>Ancho falso (1 de copa o de oro)</li>
-          <li>Rey de cualquier palo</li>
-          <li>Caballo de cualquier palo</li>
-          <li>Sota de cualquier palo</li>
+          <li>Doce de cualquier palo (12)</li>
+          <li>Once de cualquier palo (11)</li>
+          <li>Diez de cualquier palo (10)</li>
           <li>Siete de copa o de basto</li>
           <li>Seis de cualquier palo</li>
           <li>Cinco de cualquier palo</li>
@@ -64,7 +64,7 @@ const TrucoBlog = () => {
         <h2 className="text-xl font-semibold mt-8 mb-4">Por Qué Necesitas un Anotador de Truco</h2>
         <p>
           Con tantos puntos en juego y partidas que pueden alargarse, llevar la cuenta correctamente es esencial. 
-          Un anotador digital como el nuestro te permite:
+          Un anotador online como el nuestro te permite:
         </p>
         <ul className="list-disc pl-6 my-4 space-y-1">
           <li>Mantener un registro claro de los puntos de cada equipo</li>
@@ -74,7 +74,7 @@ const TrucoBlog = () => {
         </ul>
         
         <p className="mt-8">
-          Nuestro anotador de Truco es una herramienta digital gratuita diseñada específicamente para 
+          Nuestro anotador de Truco es una herramienta online gratuita diseñada específicamente para 
           jugadores de Truco Argentino. Con una interfaz intuitiva y fácil de usar, podrás concentrarte 
           en lo importante: ¡disfrutar del juego y ganar la partida!
         </p>

@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
@@ -113,20 +112,18 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
     );
   }
   
-  // Diagonal match
+  // Diagonal match - corregido para que aparezca directamente en la posición diagonal
   if (points >= 5) {
     matchElements.push(
       <div 
         key="diagonal"
         className={cn(
-          "absolute h-2 bg-[#FDB833] w-[90%] rounded-full",
-          mounted && "animate-match-appear"
+          "absolute h-2 bg-[#FDB833] w-[90%] rounded-full origin-center rotate-45",
+          mounted && "animate-match-fade"
         )}
         style={{
           top: '50%', 
           left: '5%',
-          transform: 'rotate(45deg)',
-          transformOrigin: 'center',
           boxShadow: '0 0 5px rgba(253, 184, 51, 0.6)',
           ...getDelayStyle(4)
         }}
