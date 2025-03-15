@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from "sonner";
 import { Settings, RefreshCcw } from "lucide-react";
@@ -17,6 +16,7 @@ const MatchCounter = () => {
   const [team1, setTeam1] = useState<TeamState>({ points: 0, stage: "malas" });
   const [team2, setTeam2] = useState<TeamState>({ points: 0, stage: "malas" });
   const [showControls, setShowControls] = useState(false);
+  const [gameEnded, setGameEnded] = useState(false);
 
   useEffect(() => {
     const checkGameEnd = () => {
@@ -25,11 +25,13 @@ const MatchCounter = () => {
           description: "La partida ha terminado",
           position: "top-center",
         });
+        setGameEnded(true);
       } else if (team2.stage === "buenas" && team2.points === MAX_POINTS) {
         toast("¡Ellos ganaron!", {
           description: "La partida ha terminado",
           position: "top-center",
         });
+        setGameEnded(true);
       }
     };
     
@@ -37,6 +39,14 @@ const MatchCounter = () => {
   }, [team1, team2]);
 
   const incrementTeam = (team: "team1" | "team2") => {
+    // Si el juego ya terminó, no permitir más cambios
+    if (gameEnded) {
+      toast("La partida ha terminado. Reinicie para jugar de nuevo.", {
+        position: "top-center",
+      });
+      return;
+    }
+    
     if (team === "team1") {
       if (team1.stage === "buenas" && team1.points === MAX_POINTS) return;
       
@@ -59,6 +69,14 @@ const MatchCounter = () => {
   };
 
   const decrementTeam = (team: "team1" | "team2") => {
+    // Si el juego ya terminó, no permitir más cambios
+    if (gameEnded) {
+      toast("La partida ha terminado. Reinicie para jugar de nuevo.", {
+        position: "top-center",
+      });
+      return;
+    }
+    
     if (team === "team1") {
       if (team1.stage === "buenas" && team1.points === 1) {
         setTeam1({ points: MAX_POINTS, stage: "malas" });
@@ -77,6 +95,7 @@ const MatchCounter = () => {
   const resetGame = () => {
     setTeam1({ points: 0, stage: "malas" });
     setTeam2({ points: 0, stage: "malas" });
+    setGameEnded(false);
     toast("Partida reiniciada", { position: "top-center" });
   };
 
@@ -130,7 +149,10 @@ const MatchCounter = () => {
         <div className="h-full flex relative">
           {/* Team 1 Side */}
           <div 
-            className="w-1/2 p-2 sm:p-4 flex flex-col space-y-2 relative overflow-hidden"
+            className={cn(
+              "w-1/2 p-2 sm:p-4 flex flex-col space-y-2 relative overflow-hidden",
+              gameEnded && "pointer-events-none opacity-90"
+            )}
             onClick={() => incrementTeam("team1")}
           >
             {team1Squares.map((points, index) => (
@@ -142,7 +164,7 @@ const MatchCounter = () => {
               />
             ))}
             <div 
-              className="absolute bottom-2 left-2 p-2 bg-black/10 rounded-full" 
+              className="absolute bottom-2 left-2 p-2 bg-black/10 rounded-full z-10" 
               onClick={(e) => {
                 e.stopPropagation();
                 decrementTeam("team1");
@@ -157,7 +179,10 @@ const MatchCounter = () => {
 
           {/* Team 2 Side */}
           <div 
-            className="w-1/2 p-2 sm:p-4 flex flex-col space-y-2 relative overflow-hidden"
+            className={cn(
+              "w-1/2 p-2 sm:p-4 flex flex-col space-y-2 relative overflow-hidden",
+              gameEnded && "pointer-events-none opacity-90"
+            )}
             onClick={() => incrementTeam("team2")}
           >
             {team2Squares.map((points, index) => (
@@ -169,7 +194,7 @@ const MatchCounter = () => {
               />
             ))}
             {/* Control buttons for Team 2 - Reposicionados */}
-            <div className="absolute right-2 bottom-2 flex flex-col gap-3 items-end">
+            <div className="absolute right-2 bottom-2 flex flex-col gap-3 items-end z-10">
               {/* Settings Button */}
               <Button
                 variant="outline"
@@ -183,12 +208,15 @@ const MatchCounter = () => {
                 <Settings className="h-6 w-6" />
               </Button>
               
-              {/* Reset Button (shows when controls are visible) */}
-              {showControls && (
+              {/* Reset Button (shows when controls are visible or game ended) */}
+              {(showControls || gameEnded) && (
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-12 w-12 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-all animate-fade-in"
+                  className={cn(
+                    "h-12 w-12 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-all animate-fade-in",
+                    gameEnded && "bg-red-500/30 hover:bg-red-500/50"
+                  )}
                   onClick={(e) => {
                     e.stopPropagation();
                     resetGame();
@@ -212,6 +240,18 @@ const MatchCounter = () => {
           </div>
         </div>
       </div>
+      
+      {/* Overlay for game ended */}
+      {gameEnded && (
+        <div 
+          className="absolute inset-0 bg-black/5 pointer-events-none flex items-center justify-center z-0"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="bg-red-500/20 px-8 py-4 rounded-lg backdrop-blur-sm">
+            <p className="text-white text-lg font-bold">Partida finalizada</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
