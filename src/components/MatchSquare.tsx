@@ -61,14 +61,14 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
       <div 
         ref={matchRefs.top}
         key="top" 
-        className="absolute h-2 bg-[#FDB833] w-3/4 rounded-full"
+        className="absolute h-2 md:h-[6px] bg-[#FDB833] w-3/4 rounded-full"
         style={{
           top: '10%', 
           left: '12.5%',
           boxShadow: '0 0 5px rgba(253, 184, 51, 0.6)'
         }}
       >
-        <div className="absolute top-1/2 left-0 transform -translate-y-1/2 w-3 h-3 rounded-full bg-[#e63946]" />
+        <div className="absolute top-1/2 left-0 transform -translate-y-1/2 w-3 h-3 md:w-2 md:h-2 rounded-full bg-[#e63946]" />
       </div>
     );
   }
@@ -79,14 +79,14 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
       <div 
         ref={matchRefs.right}
         key="right" 
-        className="absolute w-2 bg-[#FDB833] h-3/4 rounded-full"
+        className="absolute w-2 md:w-[6px] bg-[#FDB833] h-3/4 rounded-full"
         style={{
           top: '12.5%', 
           right: '10%',
           boxShadow: '0 0 5px rgba(253, 184, 51, 0.6)'
         }}
       >
-        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-3 h-3 rounded-full bg-[#e63946]" />
+        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-3 h-3 md:w-2 md:h-2 rounded-full bg-[#e63946]" />
       </div>
     );
   }
@@ -97,14 +97,14 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
       <div 
         ref={matchRefs.bottom}
         key="bottom" 
-        className="absolute h-2 bg-[#FDB833] w-3/4 rounded-full"
+        className="absolute h-2 md:h-[6px] bg-[#FDB833] w-3/4 rounded-full"
         style={{
           bottom: '10%', 
           left: '12.5%',
           boxShadow: '0 0 5px rgba(253, 184, 51, 0.6)'
         }}
       >
-        <div className="absolute top-1/2 left-0 transform -translate-y-1/2 w-3 h-3 rounded-full bg-[#e63946]" />
+        <div className="absolute top-1/2 left-0 transform -translate-y-1/2 w-3 h-3 md:w-2 md:h-2 rounded-full bg-[#e63946]" />
       </div>
     );
   }
@@ -115,14 +115,14 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
       <div 
         ref={matchRefs.left}
         key="left" 
-        className="absolute w-2 bg-[#FDB833] h-3/4 rounded-full"
+        className="absolute w-2 md:w-[6px] bg-[#FDB833] h-3/4 rounded-full"
         style={{
           top: '12.5%', 
           left: '10%',
           boxShadow: '0 0 5px rgba(253, 184, 51, 0.6)'
         }}
       >
-        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-3 h-3 rounded-full bg-[#e63946]" />
+        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-3 h-3 md:w-2 md:h-2 rounded-full bg-[#e63946]" />
       </div>
     );
   }
@@ -133,20 +133,20 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
       <div 
         ref={matchRefs.diagonal}
         key="diagonal"
-        className="absolute h-2 bg-[#FDB833] w-[90%] rounded-full origin-center rotate-45"
+        className="absolute h-2 md:h-[6px] bg-[#FDB833] w-[90%] rounded-full origin-center rotate-45"
         style={{
           top: '50%', 
           left: '5%',
           boxShadow: '0 0 5px rgba(253, 184, 51, 0.6)'
         }}
       >
-        <div className="absolute top-1/2 left-0 transform -translate-y-1/2 w-3 h-3 rounded-full bg-[#e63946]" />
+        <div className="absolute top-1/2 left-0 transform -translate-y-1/2 w-3 h-3 md:w-2 md:h-2 rounded-full bg-[#e63946]" />
       </div>
     );
   }
 
   return (
-    <div className="aspect-square w-full relative match-square min-h-[100px] border-2 border-[#FDB833]/50 rounded-lg">
+    <div className="aspect-square w-full relative match-square min-h-[100px] md:min-h-[150px] border-2 border-[#FDB833]/50 rounded-lg overflow-hidden">
       {matchElements}
     </div>
   );
