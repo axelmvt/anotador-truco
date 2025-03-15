@@ -8,22 +8,23 @@ interface MatchSquareProps {
 }
 
 const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps) => {
-  const [mounted, setMounted] = useState(false);
+  const [animatedPoints, setAnimatedPoints] = useState<number[]>([]);
   const prevPointsRef = useRef(0);
   
-  useEffect(() => {
-    if (isAnimated) {
-      setMounted(true);
-    }
-  }, [isAnimated]);
-  
-  // Determinar si un punto específico es nuevo (para animar solo el nuevo)
-  const isNewPoint = (index: number) => {
-    return isAnimated && index >= prevPointsRef.current;
+  // Determinar si un punto específico necesita ser animado
+  const shouldAnimate = (pointPosition: number) => {
+    if (!isAnimated) return false;
+    // Solo animar si es un punto nuevo y no ha sido animado antes
+    return pointPosition === prevPointsRef.current && !animatedPoints.includes(pointPosition);
   };
   
-  // Actualizar la referencia después del renderizado
+  // Gestionar la actualización de puntos
   useEffect(() => {
+    if (points > prevPointsRef.current) {
+      // Si se ha añadido un nuevo punto, marcarlo para animar
+      setAnimatedPoints(prev => [...prev, prevPointsRef.current]);
+    }
+    // Actualizar la referencia al número actual de puntos
     prevPointsRef.current = points;
   }, [points]);
 
@@ -46,7 +47,7 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
         key="top" 
         className={cn(
           "absolute h-2 bg-[#FDB833] w-3/4 rounded-full",
-          isNewPoint(0) && "animate-match-appear"
+          shouldAnimate(1) && "animate-match-appear"
         )}
         style={{
           top: '10%', 
@@ -67,7 +68,7 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
         key="right" 
         className={cn(
           "absolute w-2 bg-[#FDB833] h-3/4 rounded-full",
-          isNewPoint(1) && "animate-match-appear"
+          shouldAnimate(2) && "animate-match-appear"
         )}
         style={{
           top: '12.5%', 
@@ -88,7 +89,7 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
         key="bottom" 
         className={cn(
           "absolute h-2 bg-[#FDB833] w-3/4 rounded-full",
-          isNewPoint(2) && "animate-match-appear"
+          shouldAnimate(3) && "animate-match-appear"
         )}
         style={{
           bottom: '10%', 
@@ -109,7 +110,7 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
         key="left" 
         className={cn(
           "absolute w-2 bg-[#FDB833] h-3/4 rounded-full",
-          isNewPoint(3) && "animate-match-appear"
+          shouldAnimate(4) && "animate-match-appear"
         )}
         style={{
           top: '12.5%', 
@@ -130,7 +131,7 @@ const MatchSquare = ({ points, maxPoints, isAnimated = false }: MatchSquareProps
         key="diagonal"
         className={cn(
           "absolute h-2 bg-[#FDB833] w-[90%] rounded-full origin-center rotate-45",
-          isNewPoint(4) && "animate-match-fade"
+          shouldAnimate(5) && "animate-match-fade"
         )}
         style={{
           top: '50%', 
