@@ -11,12 +11,42 @@ type TeamState = {
 };
 
 const MAX_POINTS = 15;
+const STORAGE_KEY = "anotador-truco:partida";
+
+type SavedState = {
+  team1: TeamState;
+  team2: TeamState;
+  gameEnded: boolean;
+};
+
+// Lee la partida guardada; devuelve null si no hay o si localStorage no está disponible
+const loadSavedGame = (): SavedState | null => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as SavedState) : null;
+  } catch {
+    return null;
+  }
+};
 
 const MatchCounter = () => {
-  const [team1, setTeam1] = useState<TeamState>({ points: 0, stage: "malas" });
-  const [team2, setTeam2] = useState<TeamState>({ points: 0, stage: "malas" });
+  const [team1, setTeam1] = useState<TeamState>(
+    () => loadSavedGame()?.team1 ?? { points: 0, stage: "malas" }
+  );
+  const [team2, setTeam2] = useState<TeamState>(
+    () => loadSavedGame()?.team2 ?? { points: 0, stage: "malas" }
+  );
   const [showControls, setShowControls] = useState(false);
-  const [gameEnded, setGameEnded] = useState(false);
+  const [gameEnded, setGameEnded] = useState(() => loadSavedGame()?.gameEnded ?? false);
+
+  // Persiste la partida en cada cambio para no perderla al refrescar o bloquear el teléfono
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ team1, team2, gameEnded }));
+    } catch {
+      // localStorage no disponible (modo privado / cuota llena): se ignora
+    }
+  }, [team1, team2, gameEnded]);
 
   useEffect(() => {
     // Evita re-evaluar (y re-disparar el toast de victoria) una vez terminada la partida
