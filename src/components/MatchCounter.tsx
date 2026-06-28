@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from "sonner";
-import { Settings, RefreshCcw } from "lucide-react";
+import { Settings, RefreshCcw, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import MatchSquare from './MatchSquare';
@@ -38,6 +38,13 @@ const MatchCounter = () => {
   );
   const [showControls, setShowControls] = useState(false);
   const [gameEnded, setGameEnded] = useState(() => loadSavedGame()?.gameEnded ?? false);
+  // Pila de estados previos para poder deshacer la última jugada
+  const [history, setHistory] = useState<{ team1: TeamState; team2: TeamState }[]>([]);
+
+  // Guarda una instantánea del marcador antes de modificarlo (máx. 50 jugadas)
+  const pushHistory = () => {
+    setHistory((h) => [...h, { team1, team2 }].slice(-50));
+  };
 
   // Persiste la partida en cada cambio para no perderla al refrescar o bloquear el teléfono
   useEffect(() => {
@@ -75,7 +82,9 @@ const MatchCounter = () => {
       });
       return;
     }
-    
+
+    pushHistory();
+
     if (team === "team1") {
       if (team1.stage === "buenas" && team1.points === MAX_POINTS) return;
       
@@ -105,7 +114,9 @@ const MatchCounter = () => {
       });
       return;
     }
-    
+
+    pushHistory();
+
     if (team === "team1") {
       if (team1.stage === "buenas" && team1.points === 1) {
         setTeam1({ points: MAX_POINTS, stage: "malas" });
@@ -121,10 +132,25 @@ const MatchCounter = () => {
     }
   };
 
+  const undo = () => {
+    if (history.length === 0) {
+      toast("No hay jugadas para deshacer", { position: "top-center" });
+      return;
+    }
+    const last = history[history.length - 1];
+    setTeam1(last.team1);
+    setTeam2(last.team2);
+    // Deshacer también reabre la partida si el último punto la había cerrado
+    setGameEnded(false);
+    setHistory((h) => h.slice(0, -1));
+    toast("Jugada deshecha", { position: "top-center" });
+  };
+
   const resetGame = () => {
     setTeam1({ points: 0, stage: "malas" });
     setTeam2({ points: 0, stage: "malas" });
     setGameEnded(false);
+    setHistory([]);
     toast("Partida reiniciada", { position: "top-center" });
   };
 
@@ -236,7 +262,23 @@ const MatchCounter = () => {
               >
                 <Settings className="h-6 w-6" />
               </Button>
-              
+
+              {/* Undo Button (shows when there is at least one move to undo) */}
+              {history.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  aria-label="Deshacer última jugada"
+                  className="h-12 w-12 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-all animate-fade-in"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    undo();
+                  }}
+                >
+                  <Undo2 className="h-6 w-6" />
+                </Button>
+              )}
+
               {/* Reset Button (shows when controls are visible or game ended) */}
               {(showControls || gameEnded) && (
                 <Button
