@@ -19,24 +19,23 @@ const MatchCounter = () => {
   const [gameEnded, setGameEnded] = useState(false);
 
   useEffect(() => {
-    const checkGameEnd = () => {
-      if (team1.stage === "buenas" && team1.points === MAX_POINTS) {
-        toast("¡Nosotros ganamos!", {
-          description: "La partida ha terminado",
-          position: "top-center",
-        });
-        setGameEnded(true);
-      } else if (team2.stage === "buenas" && team2.points === MAX_POINTS) {
-        toast("¡Ellos ganaron!", {
-          description: "La partida ha terminado",
-          position: "top-center",
-        });
-        setGameEnded(true);
-      }
-    };
-    
-    checkGameEnd();
-  }, [team1, team2]);
+    // Evita re-evaluar (y re-disparar el toast de victoria) una vez terminada la partida
+    if (gameEnded) return;
+
+    if (team1.stage === "buenas" && team1.points === MAX_POINTS) {
+      toast("¡Nosotros ganamos!", {
+        description: "La partida ha terminado",
+        position: "top-center",
+      });
+      setGameEnded(true);
+    } else if (team2.stage === "buenas" && team2.points === MAX_POINTS) {
+      toast("¡Ellos ganaron!", {
+        description: "La partida ha terminado",
+        position: "top-center",
+      });
+      setGameEnded(true);
+    }
+  }, [team1, team2, gameEnded]);
 
   const incrementTeam = (team: "team1" | "team2") => {
     // Si el juego ya terminó, no permitir más cambios
@@ -54,7 +53,7 @@ const MatchCounter = () => {
         setTeam1({ ...team1, points: team1.points + 1 });
       } else {
         setTeam1({ points: 1, stage: "buenas" });
-        toast("¡Nosotros están en buenas!", { position: "top-center" });
+        toast("¡Nosotros estamos en buenas!", { position: "top-center" });
       }
     } else {
       if (team2.stage === "buenas" && team2.points === MAX_POINTS) return;
