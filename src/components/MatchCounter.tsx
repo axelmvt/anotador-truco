@@ -1,6 +1,6 @@
 import { useReducer, useEffect, useRef, useState } from 'react';
 import { toast } from "sonner";
-import { Settings, RefreshCcw, Undo2 } from "lucide-react";
+import { Settings, RefreshCcw, Undo2, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,9 +21,15 @@ import {
   type GameState,
   type GameMode,
   type Team,
+  type TeamState,
 } from "@/lib/gameReducer";
 
 const STORAGE_KEY = "anotador-truco:partida";
+const SHARE_URL = "https://truco.mvt.ar";
+
+// Puntaje total acumulado de un equipo (en "a 30", buenas suma 15 a la fase previa).
+const totalPoints = (team: TeamState, mode: GameMode): number =>
+  mode === 30 && team.stage === "buenas" ? 15 + team.points : team.points;
 
 // Lee la partida guardada y la normaliza; cae al estado inicial si no hay datos
 // válidos o si localStorage no está disponible.
@@ -128,6 +134,26 @@ const MatchCounter = () => {
     if (mode === state.mode) return;
     dispatch({ type: "setMode", mode });
     toast(`Modo cambiado: a ${mode}. Partida reiniciada.`, { position: "top-center" });
+  };
+
+  const shareResult = async () => {
+    const t1 = totalPoints(state.team1, state.mode);
+    const t2 = totalPoints(state.team2, state.mode);
+    const winnerLine = state.winner
+      ? `¡Ganó ${state.names[state.winner]}! 🎉`
+      : "Partida en curso 🤜🤛";
+    const text =
+      `🃏 Truco: ${state.names.team1} ${t1} - ${t2} ${state.names.team2}\n` +
+      `${winnerLine}\n\nAnotá tus partidas en ${SHARE_URL}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Anotador de Truco", text });
+      } else {
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+      }
+    } catch {
+      // El usuario canceló el menú de compartir: no se hace nada
+    }
   };
 
   const team1Squares = getSquaresForTeam(state.team1.points);
@@ -283,7 +309,19 @@ const MatchCounter = () => {
             <Button
               variant="outline"
               size="lg"
-              className="mt-3 bg-white/10 hover:bg-white/20 border-none text-white w-full pointer-events-auto"
+              className="mt-3 bg-green-600/80 hover:bg-green-600 border-none text-white w-full pointer-events-auto"
+              onClick={(e) => {
+                e.stopPropagation();
+                shareResult();
+              }}
+            >
+              <Share2 className="h-5 w-5 mr-2" />
+              Compartir resultado
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="mt-2 bg-white/10 hover:bg-white/20 border-none text-white w-full pointer-events-auto"
               onClick={(e) => {
                 e.stopPropagation();
                 resetGame();
