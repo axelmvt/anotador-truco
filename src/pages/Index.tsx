@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import { Head, ClientOnly } from "vite-react-ssg";
 import MatchCounter from "@/components/MatchCounter";
 import Footer from "@/components/Footer";
 
@@ -18,7 +18,7 @@ const jsonLd = {
 const Index = () => {
   return (
     <div className="h-full w-full bg-truco-green overflow-hidden flex flex-col">
-      <Helmet>
+      <Head>
         <title>Anotador para el Truco Argentino | Cuenta Puntos Fácil</title>
         <meta
           name="description"
@@ -26,12 +26,13 @@ const Index = () => {
         />
         <link rel="canonical" href="https://truco.mvt.ar/" />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
-      </Helmet>
+      </Head>
 
       {/* H1 descriptivo para SEO (no visible: el marcador usa h2 por equipo) */}
       <h1 className="sr-only">Anotador de Truco Argentino — Contador de puntos online</h1>
       <div className="flex-1 overflow-hidden">
-        <MatchCounter />
+        {/* El tablero usa localStorage: se renderiza solo en el cliente */}
+        <ClientOnly>{() => <MatchCounter />}</ClientOnly>
       </div>
       <Footer />
     </div>
