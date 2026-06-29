@@ -169,7 +169,7 @@ const MatchCounter = () => {
       <div className="flex justify-between items-center px-4 sm:px-6 py-3 sm:py-4 animate-fade-in">
         {(["team1", "team2"] as Team[]).map((team) => (
           <div key={team} className="w-1/2 flex justify-center">
-            <h1
+            <h2
               className={cn(
                 "text-lg sm:text-xl md:text-2xl font-semibold transform transition-all duration-300 text-center truncate px-1",
                 state[team].stage === "buenas" && state.mode === 30 ? "text-yellow-200" : "text-white"
@@ -177,7 +177,7 @@ const MatchCounter = () => {
             >
               {state.names[team]}
               {stageLabel(team)}
-            </h1>
+            </h2>
           </div>
         ))}
       </div>
