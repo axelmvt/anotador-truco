@@ -68,7 +68,7 @@ const MatchSquare = ({ points, isAnimated = false }: MatchSquareProps) => {
   }
 
   return (
-    <div className="aspect-square w-full md:max-w-[28vh] md:mx-auto relative match-square min-h-[100px] md:min-h-[150px] border-2 border-[#FDB833]/50 rounded-lg overflow-hidden">
+    <div className="aspect-square w-full md:max-w-[28vh] md:mx-auto relative match-square min-h-[100px] md:min-h-[150px] border-2 border-[#FDB833]/50 rounded-lg overflow-hidden pointer-events-none">
       <div className="w-full h-full absolute">{matchElements}</div>
     </div>
   );
