@@ -1,6 +1,6 @@
 import { useReducer, useEffect, useRef, useState } from 'react';
 import { toast } from "sonner";
-import { Settings, RefreshCcw, Undo2, Share2, Pencil } from "lucide-react";
+import { Settings, RefreshCcw, Undo2, Share2, Pencil, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -200,12 +200,31 @@ const MatchCounter = () => {
   const team1Squares = getSquaresForTeam(state.team1.points);
   const team2Squares = getSquaresForTeam(state.team2.points);
 
+  // Sumar con teclado (Enter/Espacio) sobre la mitad del equipo.
+  const handleIncrementKey = (team: Team) => (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      incrementTeam(team);
+    }
+  };
+
+  // Texto que anuncia el marcador a los lectores de pantalla (los fósforos no se "leen").
+  const scoreAnnouncement =
+    `${state.names.team1}: ${totalPoints(state.team1, state.mode)} puntos. ` +
+    `${state.names.team2}: ${totalPoints(state.team2, state.mode)} puntos.` +
+    (state.winner ? ` Ganó ${state.names[state.winner]}.` : "");
+
   // El rótulo malas/buenas solo aplica al modo a 30.
   const stageLabel = (team: Team) =>
     state.mode === 30 ? (state[team].stage === "buenas" ? " (Buenas)" : " (Malas)") : "";
 
   return (
     <div className="h-full w-full flex flex-col relative">
+      {/* Marcador para lectores de pantalla (los fósforos son visuales) */}
+      <div className="sr-only" role="status" aria-live="polite">
+        {scoreAnnouncement}
+      </div>
+
       {/* Header - nombres de cada equipo + fase */}
       <div className="flex justify-between items-center px-4 sm:px-6 py-3 sm:py-4 animate-fade-in">
         {(["team1", "team2"] as Team[]).map((team) => (
@@ -251,11 +270,15 @@ const MatchCounter = () => {
         <div className="h-full flex relative">
           {/* Team 1 Side */}
           <div
+            role="button"
+            tabIndex={0}
+            aria-label={`Sumar punto a ${state.names.team1}`}
             className={cn(
-              "w-1/2 p-2 sm:p-4 flex flex-col space-y-2 relative overflow-hidden",
+              "w-1/2 p-2 sm:p-4 flex flex-col space-y-2 relative overflow-hidden cursor-pointer select-none transition-colors active:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/40",
               gameEnded && "opacity-90"
             )}
             onClick={() => incrementTeam("team1")}
+            onKeyDown={handleIncrementKey("team1")}
           >
             {team1Squares.map((points, index) => (
               <MatchSquare
@@ -265,6 +288,13 @@ const MatchCounter = () => {
                 isAnimated={true}
               />
             ))}
+            {/* Hint de affordance cuando el equipo está en 0 */}
+            {state.team1.points === 0 && !gameEnded && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-white/30">
+                <Plus className="h-10 w-10" />
+                <span className="text-sm mt-1">Tocá para sumar</span>
+              </div>
+            )}
             <button
               type="button"
               aria-label={`Restar punto a ${state.names.team1}`}
@@ -283,11 +313,15 @@ const MatchCounter = () => {
 
           {/* Team 2 Side */}
           <div
+            role="button"
+            tabIndex={0}
+            aria-label={`Sumar punto a ${state.names.team2}`}
             className={cn(
-              "w-1/2 p-2 sm:p-4 flex flex-col space-y-2 relative overflow-hidden",
+              "w-1/2 p-2 sm:p-4 flex flex-col space-y-2 relative overflow-hidden cursor-pointer select-none transition-colors active:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/40",
               gameEnded && "opacity-90"
             )}
             onClick={() => incrementTeam("team2")}
+            onKeyDown={handleIncrementKey("team2")}
           >
             {team2Squares.map((points, index) => (
               <MatchSquare
@@ -297,6 +331,13 @@ const MatchCounter = () => {
                 isAnimated={true}
               />
             ))}
+            {/* Hint de affordance cuando el equipo está en 0 */}
+            {state.team2.points === 0 && !gameEnded && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-white/30">
+                <Plus className="h-10 w-10" />
+                <span className="text-sm mt-1">Tocá para sumar</span>
+              </div>
+            )}
             {/* Control buttons for Team 2 */}
             <div className="absolute right-2 bottom-2 flex flex-col gap-3 items-end z-30">
               {/* Settings Button */}
@@ -365,10 +406,10 @@ const MatchCounter = () => {
       {/* Overlay for game ended */}
       {gameEnded && (
         <div
-          className="absolute inset-0 bg-black/5 pointer-events-none flex items-center justify-center z-20"
+          className="absolute inset-0 bg-black/50 pointer-events-none flex items-center justify-center z-20 animate-fade-in"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="bg-red-500/20 px-8 py-4 rounded-lg backdrop-blur-sm text-center">
+          <div className="bg-red-600/40 border border-white/20 px-8 py-6 rounded-xl backdrop-blur-md shadow-xl text-center">
             <p className="text-white text-lg font-bold">¡Ganó {state.winner && state.names[state.winner]}!</p>
             <Button
               variant="outline"
