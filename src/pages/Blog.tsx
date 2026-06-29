@@ -20,7 +20,7 @@ const jsonLd = {
 
 const Blog = () => {
   return (
-    <div className="min-h-screen w-full bg-truco-green flex flex-col">
+    <div className="h-full w-full bg-truco-green flex flex-col">
       <Helmet>
         <title>Reglas del Truco Argentino: Cómo se Juega, Cartas y Cantos | Blog</title>
         <meta
@@ -44,7 +44,7 @@ const Blog = () => {
       </header>
 
       {/* Contenido principal */}
-      <main className="flex-1 overflow-y-auto py-4">
+      <main className="flex-1 min-h-0 overflow-y-auto py-4">
         <TrucoBlog />
       </main>
 
