@@ -1,6 +1,6 @@
 import { useReducer, useEffect, useRef, useState } from 'react';
 import { toast } from "sonner";
-import { Settings, RefreshCcw, Undo2, Share2 } from "lucide-react";
+import { Settings, RefreshCcw, Undo2, Share2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -71,6 +71,15 @@ const MatchCounter = () => {
   const [state, dispatch] = useReducer(gameReducer, undefined, loadSavedGame);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [feedbackEnabled, setFeedbackEnabled] = useState(loadFeedbackPref);
+  const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+
+  // Al terminar de editar, si el nombre quedó vacío vuelve al valor por defecto.
+  const finishEditing = (team: Team) => {
+    if (!state.names[team].trim()) {
+      dispatch({ type: "setName", team, name: DEFAULT_NAMES[team] });
+    }
+    setEditingTeam(null);
+  };
 
   const gameEnded = state.winner !== null;
 
@@ -200,16 +209,39 @@ const MatchCounter = () => {
       {/* Header - nombres de cada equipo + fase */}
       <div className="flex justify-between items-center px-4 sm:px-6 py-3 sm:py-4 animate-fade-in">
         {(["team1", "team2"] as Team[]).map((team) => (
-          <div key={team} className="w-1/2 flex justify-center">
-            <h2
-              className={cn(
-                "text-lg sm:text-xl md:text-2xl font-semibold transform transition-all duration-300 text-center truncate px-1",
-                state[team].stage === "buenas" && state.mode === 30 ? "text-yellow-200" : "text-white"
-              )}
-            >
-              {state.names[team]}
-              {stageLabel(team)}
-            </h2>
+          <div key={team} className="w-1/2 flex justify-center min-w-0">
+            {editingTeam === team ? (
+              <input
+                autoFocus
+                value={state.names[team]}
+                maxLength={20}
+                aria-label="Editar nombre del equipo"
+                onChange={(e) => dispatch({ type: "setName", team, name: e.target.value })}
+                onBlur={() => finishEditing(team)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === "Escape") e.currentTarget.blur();
+                }}
+                className="w-full max-w-[12rem] bg-white/15 text-white text-center text-lg sm:text-xl md:text-2xl font-semibold rounded-md px-2 py-0.5 outline-none border border-white/40 focus:border-white/80"
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setEditingTeam(team)}
+                aria-label={`Editar nombre: ${state.names[team]}`}
+                className="group flex items-center gap-1.5 max-w-full px-1"
+              >
+                <h2
+                  className={cn(
+                    "text-lg sm:text-xl md:text-2xl font-semibold transition-all duration-300 text-center truncate",
+                    state[team].stage === "buenas" && state.mode === 30 ? "text-yellow-200" : "text-white"
+                  )}
+                >
+                  {state.names[team]}
+                  {stageLabel(team)}
+                </h2>
+                <Pencil className="h-4 w-4 shrink-0 text-white/50 group-hover:text-white/80 transition-colors" />
+              </button>
+            )}
           </div>
         ))}
       </div>
