@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import { Head } from "vite-react-ssg";
 import TrucoBlog from "@/components/TrucoBlog";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ const jsonLd = {
 const Blog = () => {
   return (
     <div className="h-full w-full bg-truco-green flex flex-col">
-      <Helmet>
+      <Head>
         <title>Reglas del Truco Argentino: Cómo se Juega, Cartas y Cantos | Blog</title>
         <meta
           name="description"
@@ -29,7 +29,7 @@ const Blog = () => {
         />
         <link rel="canonical" href="https://truco.mvt.ar/blog" />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
-      </Helmet>
+      </Head>
 
       {/* Header */}
       <header className="w-full px-4 py-3 border-b border-white/20 flex items-center">
