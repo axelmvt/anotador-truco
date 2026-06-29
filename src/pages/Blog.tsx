@@ -1,6 +1,5 @@
 import TrucoBlog from "@/components/TrucoBlog";
 import Footer from "@/components/Footer";
-import AdBanner from "@/components/AdBanner";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
@@ -19,17 +18,11 @@ const Blog = () => {
         <h1 className="text-xl font-semibold text-white ml-4">Blog de Truco</h1>
       </header>
       
-      {/* Banner de publicidad superior */}
-      <AdBanner position="top" variant="horizontal" />
-      
       {/* Contenido principal */}
       <main className="flex-1 overflow-y-auto py-4">
         <TrucoBlog />
       </main>
-      
-      {/* Banner de publicidad inferior */}
-      <AdBanner position="bottom" variant="horizontal" />
-      
+
       {/* Footer */}
       <Footer />
     </div>
