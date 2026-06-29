@@ -4,6 +4,7 @@ import { Settings, RefreshCcw, Undo2, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import MatchSquare from './MatchSquare';
+import { primeAudio, playWin, playBuenas, vibrate } from "@/lib/feedback";
 import {
   gameReducer,
   createInitialState,
@@ -25,7 +27,17 @@ import {
 } from "@/lib/gameReducer";
 
 const STORAGE_KEY = "anotador-truco:partida";
+const SOUND_KEY = "anotador-truco:sonido";
 const SHARE_URL = "https://truco.mvt.ar";
+
+// Preferencia de efectos (sonido + vibración). Por defecto activada.
+const loadFeedbackPref = (): boolean => {
+  try {
+    return localStorage.getItem(SOUND_KEY) !== "off";
+  } catch {
+    return true;
+  }
+};
 
 // Puntaje total acumulado de un equipo (en "a 30", buenas suma 15 a la fase previa).
 const totalPoints = (team: TeamState, mode: GameMode): number =>
@@ -58,8 +70,18 @@ const loadSavedGame = (): GameState => {
 const MatchCounter = () => {
   const [state, dispatch] = useReducer(gameReducer, undefined, loadSavedGame);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [feedbackEnabled, setFeedbackEnabled] = useState(loadFeedbackPref);
 
   const gameEnded = state.winner !== null;
+
+  // Persiste la preferencia de efectos.
+  useEffect(() => {
+    try {
+      localStorage.setItem(SOUND_KEY, feedbackEnabled ? "on" : "off");
+    } catch {
+      // localStorage no disponible: se ignora
+    }
+  }, [feedbackEnabled]);
 
   // Persiste la partida (sin el historial) en cada cambio para no perderla al
   // refrescar o bloquear el teléfono.
@@ -83,10 +105,14 @@ const MatchCounter = () => {
     (["team1", "team2"] as Team[]).forEach((t) => {
       if (prevStages.current[t] === "malas" && stages[t] === "buenas") {
         toast(`¡${names[t]} pasó a las buenas!`, { position: "top-center" });
+        if (feedbackEnabled) {
+          playBuenas();
+          vibrate(80);
+        }
       }
     });
     prevStages.current = stages;
-  }, [t1Stage, t2Stage, names]);
+  }, [t1Stage, t2Stage, names, feedbackEnabled]);
 
   // Avisa el ganador una sola vez (no se re-dispara al recargar una partida ya cerrada).
   const prevWinner = useRef(state.winner);
@@ -96,11 +122,17 @@ const MatchCounter = () => {
         description: "La partida ha terminado",
         position: "top-center",
       });
+      if (feedbackEnabled) {
+        playWin();
+        vibrate([100, 50, 100, 50, 250]);
+      }
     }
     prevWinner.current = state.winner;
-  }, [state.winner, state.names]);
+  }, [state.winner, state.names, feedbackEnabled]);
 
   const incrementTeam = (team: Team) => {
+    // Habilita el audio dentro de un gesto del usuario (lo necesita iOS).
+    if (feedbackEnabled) primeAudio();
     if (gameEnded) {
       toast("La partida ha terminado. Reiniciá para jugar de nuevo.", { position: "top-center" });
       return;
@@ -376,6 +408,21 @@ const MatchCounter = () => {
                 value={state.names.team2}
                 maxLength={20}
                 onChange={(e) => dispatch({ type: "setName", team: "team2", name: e.target.value })}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="feedback">Sonido y vibración</Label>
+              <Switch
+                id="feedback"
+                checked={feedbackEnabled}
+                onCheckedChange={(checked) => {
+                  setFeedbackEnabled(checked);
+                  if (checked) {
+                    primeAudio();
+                    playBuenas(); // muestra cómo suena al activar
+                  }
+                }}
               />
             </div>
 
