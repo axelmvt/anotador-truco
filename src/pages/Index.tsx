@@ -1,5 +1,6 @@
 import { Head, ClientOnly } from "vite-react-ssg";
 import MatchCounter from "@/components/MatchCounter";
+import InstallPrompt from "@/components/InstallPrompt";
 import Footer from "@/components/Footer";
 
 const jsonLd = {
@@ -32,7 +33,14 @@ const Index = () => {
       <h1 className="sr-only">Anotador de Truco Argentino — Contador de puntos online</h1>
       <div className="flex-1 overflow-hidden">
         {/* El tablero usa localStorage: se renderiza solo en el cliente */}
-        <ClientOnly>{() => <MatchCounter />}</ClientOnly>
+        <ClientOnly>
+          {() => (
+            <>
+              <MatchCounter />
+              <InstallPrompt />
+            </>
+          )}
+        </ClientOnly>
       </div>
       <Footer />
     </div>
