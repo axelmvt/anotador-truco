@@ -27,6 +27,10 @@ export const routes: RouteRecord[] = [
         lazy: async () => ({ Component: (await import("./pages/ComoAnotarLosPuntos")).default }),
       },
       {
+        path: "senas-del-truco",
+        lazy: async () => ({ Component: (await import("./pages/SenasDelTruco")).default }),
+      },
+      {
         path: "*",
         lazy: async () => ({ Component: (await import("./pages/NotFound")).default }),
       },

@@ -18,6 +18,7 @@ const Footer = () => {
                 <ul className="space-y-1 text-white/80">
                   <li><Link to="/reglas-del-truco" className="hover:text-white">Reglas del Truco</Link></li>
                   <li><Link to="/valores-del-envido" className="hover:text-white">Valores del Envido</Link></li>
+                  <li><Link to="/senas-del-truco" className="hover:text-white">Señas del Truco</Link></li>
                   <li><Link to="/como-anotar-los-puntos-del-truco" className="hover:text-white">Cómo anotar los puntos</Link></li>
                   <li><Link to="/blog" className="hover:text-white">Blog sobre Truco</Link></li>
                 </ul>
@@ -81,6 +82,7 @@ const Footer = () => {
             <ul className="space-y-1 text-white/80">
               <li><Link to="/reglas-del-truco" className="hover:text-white">Reglas del Truco</Link></li>
               <li><Link to="/valores-del-envido" className="hover:text-white">Valores del Envido</Link></li>
+              <li><Link to="/senas-del-truco" className="hover:text-white">Señas del Truco</Link></li>
               <li><Link to="/como-anotar-los-puntos-del-truco" className="hover:text-white">Cómo anotar los puntos</Link></li>
               <li><Link to="/blog" className="hover:text-white">Blog sobre Truco</Link></li>
               <li><a href="https://es.wikipedia.org/wiki/Truco_argentino" className="hover:text-white" target="_blank" rel="noopener noreferrer">Historia del Truco</a></li>
