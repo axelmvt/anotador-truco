@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 const TrucoBlog = () => {
   return (
     <article className="w-full max-w-4xl mx-auto px-4 py-8 text-white/90">
@@ -74,10 +76,34 @@ const TrucoBlog = () => {
         </ul>
         
         <p className="mt-8">
-          Nuestro anotador de Truco es una herramienta online gratuita diseñada específicamente para 
-          jugadores de Truco Argentino. Con una interfaz intuitiva y fácil de usar, podrás concentrarte 
+          Nuestro anotador de Truco es una herramienta online gratuita diseñada específicamente para
+          jugadores de Truco Argentino. Con una interfaz intuitiva y fácil de usar, podrás concentrarte
           en lo importante: ¡disfrutar del juego y ganar la partida!
         </p>
+
+        <h2 className="text-xl font-semibold mt-8 mb-4">Seguí leyendo</h2>
+        <ul className="list-disc pl-6 my-4 space-y-1">
+          <li>
+            <Link to="/reglas-del-truco" className="text-yellow-200 hover:underline">
+              Las reglas del truco argentino, paso a paso
+            </Link>
+          </li>
+          <li>
+            <Link to="/valores-del-envido" className="text-yellow-200 hover:underline">
+              Valores del envido: cómo se calcula y cuánto vale cada canto
+            </Link>
+          </li>
+          <li>
+            <Link to="/senas-del-truco" className="text-yellow-200 hover:underline">
+              Las señas del truco: la tabla completa y cómo usarlas
+            </Link>
+          </li>
+          <li>
+            <Link to="/como-anotar-los-puntos-del-truco" className="text-yellow-200 hover:underline">
+              Cómo anotar los puntos: fósforos, malas y buenas
+            </Link>
+          </li>
+        </ul>
       </div>
     </article>
   );
