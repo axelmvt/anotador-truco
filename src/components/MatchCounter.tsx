@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import MatchSquare from './MatchSquare';
 import { primeAudio, playWin, playBuenas, vibrate } from "@/lib/feedback";
+import { useWakeLock } from "@/hooks/use-wake-lock";
 import {
   gameReducer,
   createInitialState,
@@ -72,6 +73,9 @@ const MatchCounter = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [feedbackEnabled, setFeedbackEnabled] = useState(loadFeedbackPref);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+
+  // Evita que el teléfono apague la pantalla en medio de la partida.
+  useWakeLock();
 
   // Al terminar de editar, si el nombre quedó vacío vuelve al valor por defecto.
   const finishEditing = (team: Team) => {
