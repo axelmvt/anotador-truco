@@ -1,9 +1,6 @@
 import { Head } from "vite-react-ssg";
 import TrucoBlog from "@/components/TrucoBlog";
-import Footer from "@/components/Footer";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { ChevronLeft } from "lucide-react";
+import ArticleLayout from "@/components/ArticleLayout";
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -18,40 +15,20 @@ const jsonLd = {
   publisher: { "@type": "Organization", name: "Anotador de Truco" },
 };
 
-const Blog = () => {
-  return (
-    <div className="h-full w-full bg-truco-green flex flex-col">
-      <Head>
-        <title>Reglas del Truco Argentino: Cómo se Juega, Cartas y Cantos | Blog</title>
-        <meta
-          name="description"
-          content="Historia y reglas del truco argentino: cómo se juega, el valor de las cartas, los cantos (envido, truco, flor) y cómo contar los puntos."
-        />
-        <link rel="canonical" href="https://truco.mvt.ar/blog" />
-        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
-      </Head>
+const Blog = () => (
+  <ArticleLayout sectionLabel="Blog de Truco">
+    <Head>
+      <title>Reglas del Truco Argentino: Cómo se Juega, Cartas y Cantos | Blog</title>
+      <meta
+        name="description"
+        content="Historia y reglas del truco argentino: cómo se juega, el valor de las cartas, los cantos (envido, truco, flor) y cómo contar los puntos."
+      />
+      <link rel="canonical" href="https://truco.mvt.ar/blog" />
+      <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+    </Head>
 
-      {/* Header */}
-      <header className="w-full px-4 py-3 border-b border-white/20 flex items-center">
-        <Link to="/">
-          <Button variant="outline" size="sm" className="border-white/30 text-white">
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Volver al anotador
-          </Button>
-        </Link>
-        {/* Etiqueta de sección, no es el encabezado principal (el h1 lo da el artículo) */}
-        <span className="text-xl font-semibold text-white ml-4">Blog de Truco</span>
-      </header>
-
-      {/* Contenido principal */}
-      <main className="flex-1 min-h-0 overflow-y-auto py-4">
-        <TrucoBlog />
-      </main>
-
-      {/* Footer */}
-      <Footer />
-    </div>
-  );
-};
+    <TrucoBlog />
+  </ArticleLayout>
+);
 
 export default Blog;

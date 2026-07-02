@@ -15,6 +15,22 @@ export const routes: RouteRecord[] = [
         lazy: async () => ({ Component: (await import("./pages/Blog")).default }),
       },
       {
+        path: "reglas-del-truco",
+        lazy: async () => ({ Component: (await import("./pages/ReglasDelTruco")).default }),
+      },
+      {
+        path: "valores-del-envido",
+        lazy: async () => ({ Component: (await import("./pages/ValoresDelEnvido")).default }),
+      },
+      {
+        path: "como-anotar-los-puntos-del-truco",
+        lazy: async () => ({ Component: (await import("./pages/ComoAnotarLosPuntos")).default }),
+      },
+      {
+        path: "senas-del-truco",
+        lazy: async () => ({ Component: (await import("./pages/SenasDelTruco")).default }),
+      },
+      {
         path: "*",
         lazy: async () => ({ Component: (await import("./pages/NotFound")).default }),
       },
