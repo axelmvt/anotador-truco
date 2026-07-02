@@ -43,10 +43,10 @@ const jsonLd = {
 const ReglasDelTruco = () => (
   <ArticleLayout sectionLabel="Reglas del Truco">
     <Head>
-      <title>Reglas del Truco Argentino: Cómo se Juega Paso a Paso</title>
+      <title>Reglas del Truco Argentino: el Reglamento Completo Paso a Paso</title>
       <meta
         name="description"
-        content="Las reglas del truco argentino explicadas fácil: la baraja, el orden de las cartas, las manos, el truco, el retruco, el envido y la flor. Con preguntas frecuentes."
+        content="El reglamento del truco argentino explicado fácil: la baraja, el orden de las cartas, las manos, el truco, el retruco, el envido, la flor y las señas. Con preguntas frecuentes."
       />
       <link rel="canonical" href="https://truco.mvt.ar/reglas-del-truco" />
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
@@ -55,14 +55,14 @@ const ReglasDelTruco = () => (
 
     <article className="w-full max-w-4xl mx-auto px-4 py-8 text-white/90">
       <h1 className="text-2xl md:text-3xl font-bold mb-6 text-white">
-        Reglas del Truco Argentino: cómo se juega paso a paso
+        Reglas del Truco Argentino: el reglamento completo, paso a paso
       </h1>
 
       <div className="prose prose-invert max-w-none opacity-90">
         <p className="lead text-lg mb-6">
           El truco se juega con la baraja española de 40 cartas (se sacan los ochos y los nueves) entre
           2, 4 o 6 jugadores divididos en dos equipos. Gana la partida el primer equipo que llega a 30
-          puntos. Acá tenés las reglas completas, explicadas de forma simple.
+          puntos. Acá tenés el reglamento completo, explicado de forma simple.
         </p>
 
         <h2 className="text-xl font-semibold mt-8 mb-4">El objetivo del juego</h2>
@@ -147,6 +147,18 @@ const ReglasDelTruco = () => (
         <p>
           Un equipo puede abandonar la ronda en cualquier momento ("irse al mazo"). El rival se lleva los
           puntos que estuvieran en juego hasta ese momento.
+        </p>
+
+        <h2 className="text-xl font-semibold mt-8 mb-4">Las señas</h2>
+        <p>
+          Cuando se juega por equipos, está permitido pasarle señas al compañero para avisarle qué
+          cartas se tienen: cejas levantadas para el ancho de espadas, un guiño para el ancho de bastos,
+          y así para cada carta importante. Tenés la tabla completa, con los consejos para que no te
+          descubran, en{" "}
+          <Link to="/senas-del-truco" className="text-yellow-200 hover:underline">
+            las señas del truco
+          </Link>
+          .
         </p>
 
         <ArticleFaq faqs={faqs} />

@@ -94,6 +94,11 @@ const TrucoBlog = () => {
             </Link>
           </li>
           <li>
+            <Link to="/senas-del-truco" className="text-yellow-200 hover:underline">
+              Las señas del truco: la tabla completa y cómo usarlas
+            </Link>
+          </li>
+          <li>
             <Link to="/como-anotar-los-puntos-del-truco" className="text-yellow-200 hover:underline">
               Cómo anotar los puntos: fósforos, malas y buenas
             </Link>
