@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import VarIcon from "@/components/icons/VarIcon";
 import {
   Dialog,
   DialogContent,
@@ -111,6 +112,7 @@ const loadSavedGame = (): GameState => {
 const MatchCounter = () => {
   const [state, dispatch] = useReducer(gameReducer, undefined, loadSavedGame);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [varOpen, setVarOpen] = useState(false);
   const [feedbackEnabled, setFeedbackEnabled] = useState(loadFeedbackPref);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
 
@@ -343,7 +345,7 @@ const MatchCounter = () => {
             <button
               type="button"
               aria-label={`Restar punto a ${state.names.team1}`}
-              className="absolute bottom-2 left-2 h-12 w-12 flex items-center justify-center bg-black/10 hover:bg-black/20 rounded-full z-10 transition-all"
+              className="absolute bottom-2 left-2 h-12 w-12 flex items-center justify-center bg-black/10 hover:bg-black/20 rounded-full z-10 transition-transform duration-150 ease-out active:scale-[0.88] active:bg-black/25"
               onClick={(e) => {
                 e.stopPropagation();
                 decrementTeam("team1");
@@ -385,12 +387,26 @@ const MatchCounter = () => {
             )}
             {/* Control buttons for Team 2 */}
             <div className="absolute right-2 bottom-2 flex flex-col gap-3 items-end z-30">
+              {/* Botón VAR — primero en la columna, arriba del engranaje */}
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="VAR — revisar las jugadas"
+                className="h-12 w-12 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-transform duration-150 ease-out active:scale-[0.88] active:bg-black/25 motion-safe:animate-fab-in"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setVarOpen(true);
+                }}
+              >
+                <VarIcon className="h-6 w-6" />
+              </Button>
+
               {/* Settings Button */}
               <Button
                 variant="outline"
                 size="icon"
                 aria-label="Configuración"
-                className="h-12 w-12 mb-2 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-all"
+                className="h-12 w-12 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-transform duration-150 ease-out active:scale-[0.88] active:bg-black/25"
                 onClick={(e) => {
                   e.stopPropagation();
                   setSettingsOpen(true);
@@ -405,7 +421,7 @@ const MatchCounter = () => {
                   variant="outline"
                   size="icon"
                   aria-label="Deshacer última jugada"
-                  className="h-12 w-12 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-all animate-fade-in"
+                  className="h-12 w-12 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-transform duration-150 ease-out active:scale-[0.88] active:bg-black/25 animate-fade-in"
                   onClick={(e) => {
                     e.stopPropagation();
                     undo();
@@ -421,7 +437,7 @@ const MatchCounter = () => {
                   variant="outline"
                   size="icon"
                   aria-label="Reiniciar partida"
-                  className="h-12 w-12 rounded-full bg-red-500/60 hover:bg-red-500/80 border-none text-white scale-110 transition-all animate-fade-in z-50"
+                  className="h-12 w-12 rounded-full bg-red-500/60 hover:bg-red-500/80 border-none text-white scale-110 transition-transform duration-150 ease-out active:scale-[0.88] active:bg-red-500/90 animate-fade-in z-50"
                   onClick={(e) => {
                     e.stopPropagation();
                     resetGame();
@@ -435,7 +451,7 @@ const MatchCounter = () => {
               <button
                 type="button"
                 aria-label={`Restar punto a ${state.names.team2}`}
-                className="h-12 w-12 flex items-center justify-center rounded-full bg-black/10 hover:bg-black/20 transition-all"
+                className="h-12 w-12 flex items-center justify-center rounded-full bg-black/10 hover:bg-black/20 transition-transform duration-150 ease-out active:scale-[0.88] active:bg-black/25"
                 onClick={(e) => {
                   e.stopPropagation();
                   decrementTeam("team2");
