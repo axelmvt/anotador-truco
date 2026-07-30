@@ -1,8 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import {
   gameReducer,
   createInitialState,
   getSquaresForTeam,
+  MAX_LOG,
   type GameState,
 } from "./gameReducer";
 
@@ -10,8 +11,14 @@ import {
 const run = (state: GameState, actions: Parameters<typeof gameReducer>[1][]) =>
   actions.reduce(gameReducer, state);
 
+// Reloj falso: el reducer es puro, así que el timestamp entra por la acción.
+const T0 = 1_770_000_000_000;
+let reloj = T0;
+const tick = (ms = 1000) => (reloj += ms);
+const resetReloj = () => { reloj = T0; };
+
 const inc = (team: "team1" | "team2", times: number) =>
-  Array.from({ length: times }, () => ({ type: "increment", team }) as const);
+  Array.from({ length: times }, () => ({ type: "increment", team, at: tick() }) as const);
 
 describe("modo largo (a 30)", () => {
   const initial = createInitialState(30);
@@ -36,9 +43,9 @@ describe("modo largo (a 30)", () => {
 
   it("decrementar en {1, buenas} vuelve a {15, malas} y es reversible", () => {
     const enBuenas = run(initial, inc("team1", 16));
-    const back = gameReducer(enBuenas, { type: "decrement", team: "team1" });
+    const back = gameReducer(enBuenas, { type: "decrement", team: "team1", at: tick() });
     expect(back.team1).toEqual({ points: 15, stage: "malas" });
-    const forward = gameReducer(back, { type: "increment", team: "team1" });
+    const forward = gameReducer(back, { type: "increment", team: "team1", at: tick() });
     expect(forward.team1).toEqual({ points: 1, stage: "buenas" });
   });
 });
@@ -60,27 +67,27 @@ describe("modo corto (a 15)", () => {
 
 describe("reglas comunes", () => {
   it("decrementar en {0, malas} no baja de cero", () => {
-    const s = gameReducer(createInitialState(30), { type: "decrement", team: "team1" });
+    const s = gameReducer(createInitialState(30), { type: "decrement", team: "team1", at: tick() });
     expect(s.team1).toEqual({ points: 0, stage: "malas" });
   });
 
   it("no se puede incrementar tras ganar", () => {
     const won = run(createInitialState(15), inc("team1", 15));
-    const after = gameReducer(won, { type: "increment", team: "team1" });
+    const after = gameReducer(won, { type: "increment", team: "team1", at: tick() });
     expect(after).toEqual(won);
   });
 
   it("deshacer restaura el estado previo y reabre la partida", () => {
     const won = run(createInitialState(15), inc("team1", 15));
     expect(won.winner).toBe("team1");
-    const undone = gameReducer(won, { type: "undo" });
+    const undone = gameReducer(won, { type: "undo", at: tick() });
     expect(undone.team1).toEqual({ points: 14, stage: "malas" });
     expect(undone.winner).toBeNull();
   });
 
   it("deshacer sin historial es no-op", () => {
     const initial = createInitialState(30);
-    expect(gameReducer(initial, { type: "undo" })).toEqual(initial);
+    expect(gameReducer(initial, { type: "undo", at: tick() })).toEqual(initial);
   });
 
   it("reset vuelve al inicio conservando modo y nombres", () => {
@@ -115,5 +122,116 @@ describe("getSquaresForTeam", () => {
     [15, [5, 5, 5]],
   ])("puntos=%i => %j", (points, expected) => {
     expect(getSquaresForTeam(points)).toEqual(expected);
+  });
+});
+
+describe("log del VAR", () => {
+  beforeEach(resetReloj);
+
+  it("cada suma y cada resta escriben una entrada", () => {
+    const s = run(createInitialState(30), [
+      { type: "increment", team: "team1", at: 100 },
+      { type: "increment", team: "team1", at: 200 },
+      { type: "decrement", team: "team1", at: 300 },
+    ]);
+    expect(s.log).toHaveLength(3);
+    expect(s.log.map((e) => e.type)).toEqual(["suma", "suma", "resta"]);
+    expect(s.log.map((e) => e.points)).toEqual([1, 2, 1]);
+    expect(s.log.map((e) => e.at)).toEqual([100, 200, 300]);
+    expect(s.log.map((e) => e.delta)).toEqual([1, 1, -1]);
+  });
+
+  it("los ids son únicos y correlativos", () => {
+    const s = run(createInitialState(30), inc("team1", 4));
+    expect(s.log.map((e) => e.id)).toEqual(["L1", "L2", "L3", "L4"]);
+    expect(s.nextLogId).toBe(5);
+  });
+
+  it("un movimiento sin efecto no escribe nada", () => {
+    // restar en cero no cambia el marcador, así que tampoco el log
+    const s = gameReducer(createInitialState(30), { type: "decrement", team: "team1", at: 100 });
+    expect(s.log).toHaveLength(0);
+  });
+
+  it("con la partida terminada no se escribe nada", () => {
+    const ganada = run(createInitialState(15), inc("team1", 15));
+    const largo = ganada.log.length;
+    const s = gameReducer(ganada, { type: "increment", team: "team2", at: 9_999 });
+    expect(s.log).toHaveLength(largo);
+  });
+
+  it("la entrada guarda la fase resultante, no la anterior", () => {
+    const s = run(createInitialState(30), inc("team1", 16));
+    const ultima = s.log[s.log.length - 1];
+    expect(ultima.stage).toBe("buenas");
+    expect(ultima.points).toBe(1);
+  });
+
+  it("deshacer agrega una entrada y no borra la anterior", () => {
+    const s = run(createInitialState(30), [
+      { type: "increment", team: "team1", at: 100 },
+      { type: "increment", team: "team1", at: 200 },
+      { type: "undo", at: 300 },
+    ]);
+    expect(s.log).toHaveLength(3);
+    const ultima = s.log[2];
+    expect(ultima.type).toBe("deshacer");
+    expect(ultima.undoneType).toBe("suma");
+    expect(ultima.team).toBe("team1");
+    expect(ultima.delta).toBe(-1);
+    expect(ultima.points).toBe(1); // el marcador quedó en 1
+    expect(s.team1.points).toBe(1);
+  });
+
+  it("deshacer dos veces seguidas apunta a la jugada correcta", () => {
+    // Sin saltar los deshacer ya consumidos, el segundo undo diría
+    // undoneType: "deshacer" en vez de "suma".
+    const s = run(createInitialState(30), [
+      { type: "increment", team: "team1", at: 100 },
+      { type: "decrement", team: "team1", at: 200 },
+      { type: "undo", at: 300 },
+      { type: "undo", at: 400 },
+    ]);
+    expect(s.log.map((e) => e.type)).toEqual(["suma", "resta", "deshacer", "deshacer"]);
+    expect(s.log[2].undoneType).toBe("resta");
+    expect(s.log[3].undoneType).toBe("suma");
+    expect(s.team1.points).toBe(0);
+  });
+
+  it("deshacer sin historial no toca el log", () => {
+    const s = gameReducer(createInitialState(30), { type: "undo", at: 100 });
+    expect(s.log).toHaveLength(0);
+    expect(s.nextLogId).toBe(1);
+  });
+
+  it("reset y setMode vacían el log", () => {
+    const jugada = run(createInitialState(30), inc("team1", 3));
+    expect(gameReducer(jugada, { type: "reset" }).log).toHaveLength(0);
+    expect(gameReducer(jugada, { type: "reset" }).nextLogId).toBe(1);
+    expect(gameReducer(jugada, { type: "setMode", mode: 15 }).log).toHaveLength(0);
+  });
+
+  it("setName no toca el log", () => {
+    const jugada = run(createInitialState(30), inc("team1", 2));
+    const s = gameReducer(jugada, { type: "setName", team: "team1", name: "Los Pibes" });
+    expect(s.log).toHaveLength(2);
+  });
+
+  it("el log se recorta a MAX_LOG conservando las más nuevas", () => {
+    // Una partida a 30 tiene techo de 30 sumas por equipo, y al ganar el
+    // reducer deja de escribir. Para superar 200 entradas sin terminarla se
+    // alterna suma y resta sobre el mismo equipo: el marcador oscila 1-0-1-0
+    // y cada acción sí cambia el estado, así que cada una escribe.
+    const acciones = Array.from({ length: 220 }, (_, i) =>
+      i % 2 === 0
+        ? ({ type: "increment", team: "team1", at: 1000 + i } as const)
+        : ({ type: "decrement", team: "team1", at: 1000 + i } as const)
+    );
+    const s = run(createInitialState(30), acciones);
+    expect(s.log).toHaveLength(MAX_LOG);
+    expect(s.log[s.log.length - 1].at).toBe(1000 + 219);
+    expect(s.winner).toBeNull();
+    // el contador de ids no se recorta: siguió contando las 220
+    expect(s.nextLogId).toBe(221);
   });
 });
