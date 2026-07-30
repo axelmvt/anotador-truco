@@ -141,19 +141,25 @@ const decrementTeam = (state: GameState, team: Team, at: number): GameState => {
   return state;
 };
 
-// Qué jugada revierte un deshacer: recorre el log hacia atrás salteando las
-// que ya fueron deshechas. Sin esto, deshacer dos veces seguidas reportaría
-// "se deshizo un deshacer" en vez de la jugada original.
-export const entradaRevertida = (log: LogEntry[]): LogEntry | undefined => {
-  let pendientes = 0;
-  for (let i = log.length - 1; i >= 0; i--) {
-    const e = log[i];
-    if (e.type === "deshacer") {
-      pendientes++;
-      continue;
-    }
-    if (pendientes === 0) return e;
-    pendientes--;
+// Total de puntos de un equipo contando la fase: en "buenas" ya se completaron
+// las 15 de "malas", así que el total es PHASE_POINTS + points. Sirve para
+// comparar snapshots sin que un salto de fase (donde `points` baja) confunda
+// la dirección del cambio.
+const total = (s: TeamState): number => (s.stage === "buenas" ? PHASE_POINTS + s.points : s.points);
+
+// Deduce qué jugada revierte un deshacer comparando el snapshot previo contra
+// el estado actual. No mira el log, así que no le afecta el recorte a MAX_LOG:
+// una jugada puede haber sido expulsada del log por viejos ciclos de
+// suma+deshacer y seguir viva en `history`, y esta función igual la encuentra.
+export const jugadaRevertida = (
+  state: GameState,
+  previo: { team1: TeamState; team2: TeamState }
+): { team: Team; type: "suma" | "resta" } | undefined => {
+  for (const team of ["team1", "team2"] as const) {
+    const actual = total(state[team]);
+    const anterior = total(previo[team]);
+    if (actual > anterior) return { team, type: "suma" };
+    if (actual < anterior) return { team, type: "resta" };
   }
   return undefined;
 };
@@ -167,7 +173,7 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
     case "undo": {
       if (state.history.length === 0) return state;
       const last = state.history[state.history.length - 1];
-      const revertida = entradaRevertida(state.log);
+      const jugada = jugadaRevertida(state, last);
       // Deshacer también reabre la partida si el último punto la había cerrado
       const base: GameState = {
         ...state,
@@ -175,16 +181,16 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         winner: null,
         history: state.history.slice(0, -1),
       };
-      if (!revertida) return base;
+      if (!jugada) return base;
       const entrada: LogEntry = {
         id: `L${state.nextLogId}`,
-        team: revertida.team,
+        team: jugada.team,
         type: "deshacer",
-        delta: -revertida.delta,
-        points: last[revertida.team].points,
-        stage: last[revertida.team].stage,
+        delta: jugada.type === "suma" ? -1 : 1,
+        points: last[jugada.team].points,
+        stage: last[jugada.team].stage,
         at: action.at,
-        undoneType: revertida.type,
+        undoneType: jugada.type,
       };
       return {
         ...base,
