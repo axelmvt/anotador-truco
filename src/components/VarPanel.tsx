@@ -222,8 +222,102 @@ const Vacio = ({ onClose }: { onClose: () => void }) => (
   </div>
 );
 
+interface Stats {
+  sumas: number;
+  restas: number;
+  mejorRacha: number;
+  total: number;
+}
+
+// Cuenta por equipo. La mejor racha son sumas consecutivas sin que el rival
+// anote en el medio; los deshacer no cortan la racha, solo corrigen.
+const statsDe = (log: LogEntry[], team: Team): Stats => {
+  const propias = log.filter((e) => e.team === team);
+  let mejorRacha = 0;
+  let actual = 0;
+  for (const e of log) {
+    if (e.type === "deshacer") continue;
+    if (e.team === team && e.type === "suma") {
+      actual += 1;
+      mejorRacha = Math.max(mejorRacha, actual);
+    } else if (e.team !== team) {
+      actual = 0;
+    }
+  }
+  return {
+    sumas: propias.filter((e) => e.type === "suma").length,
+    restas: propias.filter((e) => e.type === "resta").length,
+    mejorRacha,
+    total: propias.length,
+  };
+};
+
+// En "a 30" las buenas suman 15 a la fase previa.
+const puntosTotales = (t: TeamState, mode: GameMode): number =>
+  mode === 30 && t.stage === "buenas" ? 15 + t.points : t.points;
+
+const TarjetaResumen = ({
+  team,
+  nombre,
+  estado,
+  stats,
+  mode,
+}: {
+  team: Team;
+  nombre: string;
+  estado: TeamState;
+  stats: Stats;
+  mode: GameMode;
+}) => (
+  <div
+    className={cn(
+      "mb-2.5 rounded-2xl border-t-2 bg-white/[0.055] p-3.5",
+      team === "team1" ? "border-t-truco-stick" : "border-t-truco-head"
+    )}
+  >
+    <div className="mb-3 flex items-center gap-2.5">
+      <Fosforo team={team} vertical />
+      <span className="min-w-0 flex-1 truncate text-[15px] font-bold" title={nombre}>
+        {nombre}
+      </span>
+      <div className="flex shrink-0 flex-col items-end gap-1">
+        <span className="font-mono text-[26px] font-extrabold leading-none tabular-nums">
+          {puntosTotales(estado, mode)}
+        </span>
+        {mode === 30 && (
+          <span className="font-mono text-[9.5px] uppercase tracking-widest text-truco-cream/40">
+            {estado.stage === "buenas" ? "Buenas" : "Malas"}
+          </span>
+        )}
+      </div>
+    </div>
+    <div className="grid grid-cols-3 gap-2">
+      {([
+        ["Sumas", stats.sumas, false],
+        ["Restas", stats.restas, true],
+        ["Mejor racha", stats.mejorRacha, false],
+      ] as const).map(([k, n, neg]) => (
+        <div key={k} className="rounded-[9px] bg-black/25 px-2 py-2.5 text-center">
+          <span
+            className={cn(
+              "block font-mono text-[19px] font-extrabold leading-none tabular-nums",
+              neg && n > 0 && "text-truco-headSoft"
+            )}
+          >
+            {n}
+          </span>
+          <span className="mt-1.5 block font-mono text-[9px] uppercase tracking-widest text-truco-cream/40">
+            {k}
+          </span>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
 const VarPanel = ({ open, onOpenChange, log, names, mode, team1, team2 }: VarPanelProps) => {
   const mostrarFase = mode === 30;
+  const [vista, setVista] = useState<"movimientos" | "resumen">("movimientos");
 
   // El "ahora" se fija al abrir: si se recalculara en cada render, los
   // separadores de tiempo saltarían mientras el panel está abierto.
@@ -234,6 +328,20 @@ const VarPanel = ({ open, onOpenChange, log, names, mode, team1, team2 }: VarPan
 
   const tandas = useMemo(() => agruparEnTandas(log).reverse(), [log]);
   const hitos = useMemo(() => hitosDeBuenas(log, mode), [log, mode]);
+  const reparto = useMemo(() => {
+    const t1 = log.filter((e) => e.team === "team1").length;
+    const t2 = log.filter((e) => e.team === "team2").length;
+    const total = t1 + t2 || 1;
+    return {
+      t1,
+      t2,
+      pct1: Math.round((t1 / total) * 100),
+      deshechos: log.filter((e) => e.type === "deshacer").length,
+      minutos: log.length
+        ? Math.max(1, Math.round((log[log.length - 1].at - log[0].at) / 60_000))
+        : 0,
+    };
+  }, [log]);
 
   const filas: React.ReactNode[] = [];
   let bucketPrevio: number | null = null;
@@ -301,15 +409,105 @@ const VarPanel = ({ open, onOpenChange, log, names, mode, team1, team2 }: VarPan
           </button>
         </div>
 
+        <div
+          role="tablist"
+          aria-label="Vista del historial"
+          className="relative mx-4 mt-3 flex shrink-0 rounded-[11px] border border-truco-cream/15 bg-black/35 p-[3px]"
+        >
+          <span
+            aria-hidden="true"
+            className={cn(
+              "absolute inset-y-[3px] left-[3px] w-[calc(50%-3px)] rounded-lg bg-truco-stick transition-transform [transition-duration:260ms] [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]",
+              vista === "resumen" && "translate-x-full"
+            )}
+          />
+          {(["movimientos", "resumen"] as const).map((v) => (
+            <button
+              key={v}
+              type="button"
+              role="tab"
+              aria-selected={vista === v}
+              onClick={() => setVista(v)}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+                  e.preventDefault();
+                  setVista(vista === "movimientos" ? "resumen" : "movimientos");
+                }
+              }}
+              className={cn(
+                "relative z-10 flex-1 rounded-lg py-2.5 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-truco-cream",
+                vista === v ? "text-[#1A1206]" : "text-truco-cream/65"
+              )}
+            >
+              {v === "movimientos" ? "Movimientos" : "Resumen"}
+            </button>
+          ))}
+        </div>
+
         <DrawerDescription className="sr-only">
           Historial de solo lectura de los puntos sumados, restados y deshechos en la partida.
         </DrawerDescription>
 
         <div
-          role={log.length === 0 ? undefined : "list"}
+          role={vista === "movimientos" && log.length > 0 ? "list" : undefined}
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3"
         >
-          {log.length === 0 ? <Vacio onClose={() => onOpenChange(false)} /> : filas}
+          {log.length === 0 ? (
+            <Vacio onClose={() => onOpenChange(false)} />
+          ) : vista === "movimientos" ? (
+            filas
+          ) : (
+            <div className="motion-safe:animate-var-row-in">
+              <TarjetaResumen
+                team="team1"
+                nombre={names.team1}
+                estado={team1}
+                stats={statsDe(log, "team1")}
+                mode={mode}
+              />
+              <TarjetaResumen
+                team="team2"
+                nombre={names.team2}
+                estado={team2}
+                stats={statsDe(log, "team2")}
+                mode={mode}
+              />
+              <div className="rounded-2xl bg-white/[0.055] p-3.5">
+                <div className="flex h-2 overflow-hidden rounded-full bg-black/30">
+                  <span
+                    className="block bg-truco-stick transition-[width] duration-500"
+                    style={{ width: `${reparto.pct1}%` }}
+                  />
+                  <span
+                    className="block bg-truco-head transition-[width] duration-500"
+                    style={{ width: `${100 - reparto.pct1}%` }}
+                  />
+                </div>
+                <div className="mt-2 flex justify-between font-mono text-[10px] text-truco-cream/40">
+                  <span className="max-w-[45%] truncate">
+                    {names.team1} · {reparto.t1}
+                  </span>
+                  <span className="max-w-[45%] truncate">
+                    {reparto.t2} · {names.team2}
+                  </span>
+                </div>
+                <div className="mt-3 flex justify-between border-t border-truco-cream/15 pt-2.5 font-mono text-[11px] text-truco-cream/40">
+                  <span>
+                    {log.length} movimientos
+                    <br />
+                    <span className="text-truco-cream/65">{reparto.deshechos} deshechos</span>
+                  </span>
+                  <span className="text-right">
+                    {reparto.minutos} min de partida
+                    <br />
+                    <span className="text-truco-cream/65">
+                      {hhmm(log[0].at)} – {hhmm(log[log.length - 1].at)}
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </DrawerContent>
     </Drawer>
