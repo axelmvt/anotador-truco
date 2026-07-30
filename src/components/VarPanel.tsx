@@ -43,15 +43,20 @@ const Fosforo = ({ team, vertical = false }: { team: Team; vertical?: boolean })
   />
 );
 
+// role="presentation": no es un ítem de la lista, es un separador visual.
+// Los hijos directos de un role="list" que no son "listitem" tienen que
+// declararlo así, o el rol del contenedor deja de ser fiable para lectores
+// de pantalla.
 const Separador = ({ children, hito = false }: { children: React.ReactNode; hito?: boolean }) => (
   <div
+    role="presentation"
     className={cn(
       "mt-3.5 mb-2 flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] first:mt-0.5",
       hito ? "text-truco-stick" : "text-truco-cream/40"
     )}
   >
     <span>{children}</span>
-    <span className={cn("h-px flex-1", hito ? "bg-truco-stick/40" : "bg-truco-cream/12")} />
+    <span className={cn("h-px flex-1", hito ? "bg-truco-stick/40" : "bg-truco-cream/15")} />
   </div>
 );
 
@@ -83,6 +88,9 @@ const TarjetaTanda = ({
   const [abierta, setAbierta] = useState(false);
   const fase = t.stage === "buenas" ? "Buenas" : "Malas";
   const signo = t.delta > 0 ? "+" : "−";
+  // Id estable y único por tarjeta (derivado de t.id) para enlazar el botón
+  // con su detalle vía aria-controls.
+  const detalleId = `var-detalle-${t.id}`;
 
   return (
     <div
@@ -94,6 +102,7 @@ const TarjetaTanda = ({
       <button
         type="button"
         aria-expanded={abierta}
+        aria-controls={detalleId}
         onClick={() => setAbierta((v) => !v)}
         aria-label={`${nombre} ${t.delta > 0 ? "sumó" : "restó"} ${Math.abs(t.delta)} ${
           Math.abs(t.delta) === 1 ? "punto" : "puntos"
@@ -144,16 +153,22 @@ const TarjetaTanda = ({
         <ChevronDown
           aria-hidden="true"
           className={cn(
-            "h-3.5 w-3.5 shrink-0 text-truco-cream/40 transition-transform duration-[260ms]",
+            "h-3.5 w-3.5 shrink-0 text-truco-cream/40 transition-transform [transition-duration:260ms]",
             abierta && "rotate-180"
           )}
         />
       </button>
 
-      {/* grid 0fr→1fr: anima la altura sin conocerla de antemano */}
+      {/* grid 0fr→1fr: anima la altura sin conocerla de antemano.
+          aria-hidden cuando está cerrada: el recorte visual (grid-rows-[0fr] +
+          overflow-hidden) no saca el contenido del árbol de accesibilidad por
+          sí solo, así que sin esto un lector de pantalla leería las horas de
+          cada movimiento aunque la tarjeta esté colapsada. */}
       <div
+        id={detalleId}
+        aria-hidden={!abierta}
         className={cn(
-          "grid transition-[grid-template-rows] duration-[260ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
+          "grid transition-[grid-template-rows] [transition-duration:260ms] [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]",
           abierta ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
         )}
       >
@@ -228,17 +243,10 @@ const VarPanel = ({ open, onOpenChange, log, names, mode, team1, team2 }: VarPan
       bucketPrevio = b.k;
       filas.push(<Separador key={`sep-${t.id}`}>{b.label}</Separador>);
     }
-    const hito = t.items.find((x) => hitos[x.id]);
-    if (hito) {
-      filas.push(
-        <Separador key={`hito-${t.id}`} hito>
-          ▸ {names[hitos[hito.id]]} pasó a las buenas
-        </Separador>
-      );
-    }
     filas.push(
       <div
         key={t.id}
+        role="listitem"
         className="motion-safe:animate-var-row-in"
         style={{ animationDelay: `${Math.min(i * 24, 260)}ms` }}
       >
@@ -249,6 +257,17 @@ const VarPanel = ({ open, onOpenChange, log, names, mode, team1, team2 }: VarPan
         )}
       </div>
     );
+    // El hito va DESPUÉS de la tarjeta: la lista está invertida (más nuevo
+    // arriba), así que todo lo que queda por encima del separador ya está en
+    // buenas — incluida esta misma tanda, que es la que cruzó.
+    const hito = t.items.find((x) => hitos[x.id]);
+    if (hito) {
+      filas.push(
+        <Separador key={`hito-${t.id}`} hito>
+          ▸ {names[hitos[hito.id]]} pasó a las buenas
+        </Separador>
+      );
+    }
   });
 
   return (
@@ -287,7 +306,7 @@ const VarPanel = ({ open, onOpenChange, log, names, mode, team1, team2 }: VarPan
         </DrawerDescription>
 
         <div
-          role="list"
+          role={log.length === 0 ? undefined : "list"}
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3"
         >
           {log.length === 0 ? <Vacio onClose={() => onOpenChange(false)} /> : filas}
