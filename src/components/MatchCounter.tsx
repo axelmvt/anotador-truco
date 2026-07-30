@@ -21,10 +21,12 @@ import {
   createInitialState,
   getSquaresForTeam,
   DEFAULT_NAMES,
+  MAX_LOG,
   type GameState,
   type GameMode,
   type Team,
   type TeamState,
+  type LogEntry,
 } from "@/lib/gameReducer";
 
 const STORAGE_KEY = "anotador-truco:partida";
@@ -44,6 +46,27 @@ const loadFeedbackPref = (): boolean => {
 const totalPoints = (team: TeamState, mode: GameMode): number =>
   mode === 30 && team.stage === "buenas" ? 15 + team.points : team.points;
 
+// Descarta entradas corruptas de un log guardado por otra versión y recorta al
+// tope. Un log inválido no es un error: se arranca sin historial.
+const sanearLog = (raw: unknown): LogEntry[] => {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter(
+      (e): e is LogEntry =>
+        !!e &&
+        typeof e.at === "number" &&
+        typeof e.id === "string" &&
+        (e.team === "team1" || e.team === "team2") &&
+        (e.type === "suma" || e.type === "resta" || e.type === "deshacer")
+    )
+    .slice(-MAX_LOG);
+};
+
+// El contador se recalcula del log en vez de confiar en lo guardado: así dos
+// entradas nunca comparten id aunque el valor almacenado esté mal.
+const siguienteLogId = (log: LogEntry[]): number =>
+  log.reduce((max, e) => Math.max(max, Number(e.id.replace(/^L/, "")) || 0), 0) + 1;
+
 // Lee la partida guardada y la normaliza; cae al estado inicial si no hay datos
 // válidos o si localStorage no está disponible.
 const loadSavedGame = (): GameState => {
@@ -52,6 +75,7 @@ const loadSavedGame = (): GameState => {
     if (!raw) return createInitialState();
     const p = JSON.parse(raw);
     if (!p?.team1 || !p?.team2) return createInitialState();
+    const log = sanearLog(p.log);
     return {
       mode: p.mode === 15 ? 15 : 30,
       names: {
@@ -62,6 +86,8 @@ const loadSavedGame = (): GameState => {
       team2: p.team2,
       winner: p.winner ?? null,
       history: [],
+      log,
+      nextLogId: siguienteLogId(log),
     };
   } catch {
     return createInitialState();
@@ -96,12 +122,13 @@ const MatchCounter = () => {
     }
   }, [feedbackEnabled]);
 
-  // Persiste la partida (sin el historial) en cada cambio para no perderla al
-  // refrescar o bloquear el teléfono.
+  // Persiste la partida (sin la pila de deshacer, y sin el contador de ids que
+  // se recalcula al leer) en cada cambio, para no perderla al refrescar.
   useEffect(() => {
     try {
-      const { history, ...persistable } = state;
+      const { history, nextLogId, ...persistable } = state;
       void history;
+      void nextLogId;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(persistable));
     } catch {
       // localStorage no disponible (modo privado / cuota llena): se ignora
@@ -150,7 +177,7 @@ const MatchCounter = () => {
       toast("La partida ha terminado. Reiniciá para jugar de nuevo.", { position: "top-center" });
       return;
     }
-    dispatch({ type: "increment", team });
+    dispatch({ type: "increment", team, at: Date.now() });
   };
 
   const decrementTeam = (team: Team) => {
@@ -158,7 +185,7 @@ const MatchCounter = () => {
       toast("La partida ha terminado. Reiniciá para jugar de nuevo.", { position: "top-center" });
       return;
     }
-    dispatch({ type: "decrement", team });
+    dispatch({ type: "decrement", team, at: Date.now() });
   };
 
   const undo = () => {
@@ -166,7 +193,7 @@ const MatchCounter = () => {
       toast("No hay jugadas para deshacer", { position: "top-center" });
       return;
     }
-    dispatch({ type: "undo" });
+    dispatch({ type: "undo", at: Date.now() });
     toast("Jugada deshecha", { position: "top-center" });
   };
 
