@@ -23,7 +23,8 @@
 - **Phase (Malas/Buenas) only exists in mode 30.** In mode 15 no phase UI renders at all.
 - `MAX_LOG = 200`, `UMBRAL_TANDA_MS = 120_000` (2 minutes), `MAX_HISTORY = 50` (unchanged).
 - **Commits in Spanish**, Conventional Commits with scope: `feat(var):`, `feat(juego):`, `fix(ui):`.
-- **No component-level test infrastructure exists** (`@testing-library` and `jsdom` are not installed, and this plan does not add them). Pure modules get Vitest tests; component tasks are verified with `npm run lint`, `npm run build` and an explicit manual checklist.
+- **No component-level test infrastructure exists** (`@testing-library` and `jsdom` are not installed, and this plan does not add them). Pure modules get Vitest tests; component tasks are verified with `npm run lint`, `npx tsc -p tsconfig.app.json --noEmit`, `npm run build` and an explicit manual checklist.
+- **Type-check with `npx tsc -p tsconfig.app.json --noEmit`, nothing else.** `npm test` does not type-check, and neither does `npm run build` — Vite/SWC strips types without validating them, so the build goes green over broken types. A bare `npx tsc --noEmit` also checks nothing: the root `tsconfig.json` is a solution-style config with references and no files of its own. Only the `-p tsconfig.app.json` form is a real gate.
 
 ## File Structure
 
@@ -834,8 +835,8 @@ In the persistence effect, `nextLogId` joins `history` in the discard list — i
 
 - [ ] **Step 4: Verify it compiles and builds**
 
-Run: `npm run lint && npm run build`
-Expected: both succeed. The build is the real type gate here — `npm test` does not type-check components.
+Run: `npm run lint && npx tsc -p tsconfig.app.json --noEmit && npm run build`
+Expected: all three succeed. The `tsc` step is the real type gate: `npm test` does not type-check components, and `npm run build` does not either — Vite/SWC strips types without checking them, so a build can go green over broken types. Note the `-p tsconfig.app.json`: a bare `npx tsc --noEmit` checks nothing, because the root `tsconfig.json` is a solution-style config with references and no files of its own.
 
 - [ ] **Step 5: Verify persistence by hand**
 
@@ -959,7 +960,7 @@ Append to the end of `src/index.css`. The `motion-safe:` prefix already covers t
 
 - [ ] **Step 5: Verify the build**
 
-Run: `npm run lint && npm run build`
+Run: `npm run lint && npx tsc -p tsconfig.app.json --noEmit && npm run build`
 Expected: both succeed.
 
 - [ ] **Step 6: Commit**
@@ -1067,7 +1068,7 @@ For the reset button, which is red, use `active:bg-red-500/90` instead of `activ
 
 - [ ] **Step 3: Verify build**
 
-Run: `npm run lint && npm run build`
+Run: `npm run lint && npx tsc -p tsconfig.app.json --noEmit && npm run build`
 Expected: both succeed. `varOpen` is set but never read yet — that is fine, eslint has `@typescript-eslint/no-unused-vars` disabled.
 
 - [ ] **Step 4: Verify by hand**
@@ -1457,7 +1458,7 @@ Render it just before the settings `<Dialog>` near the end of the JSX:
 
 - [ ] **Step 4: Verify build**
 
-Run: `npm run lint && npm run build`
+Run: `npm run lint && npx tsc -p tsconfig.app.json --noEmit && npm run build`
 Expected: both succeed.
 
 - [ ] **Step 5: Verify by hand**
@@ -1730,7 +1731,7 @@ And add `reparto` next to the other `useMemo` calls in `VarPanel`:
 
 - [ ] **Step 4: Verify build**
 
-Run: `npm run lint && npm run build`
+Run: `npm run lint && npx tsc -p tsconfig.app.json --noEmit && npm run build`
 Expected: both succeed.
 
 - [ ] **Step 5: Verify by hand**
@@ -1917,7 +1918,7 @@ Replace the header JSX with:
 
 - [ ] **Step 4: Verify build**
 
-Run: `npm run lint && npm run build`
+Run: `npm run lint && npx tsc -p tsconfig.app.json --noEmit && npm run build`
 Expected: both succeed. If the build complains that `stageLabel` is undefined, a reference was left behind — search for it and remove it.
 
 - [ ] **Step 5: Verify by hand**
@@ -1987,7 +1988,7 @@ The center divider already exists inside the board. Add the draw animation so al
 
 - [ ] **Step 3: Verify build**
 
-Run: `npm run lint && npm run build`
+Run: `npm run lint && npx tsc -p tsconfig.app.json --noEmit && npm run build`
 Expected: both succeed.
 
 - [ ] **Step 4: Verify by hand**
@@ -2105,7 +2106,7 @@ Note the collapsed links stay in the DOM. That is deliberate: it keeps them craw
 
 - [ ] **Step 3: Verify build**
 
-Run: `npm run lint && npm run build`
+Run: `npm run lint && npx tsc -p tsconfig.app.json --noEmit && npm run build`
 Expected: both succeed.
 
 - [ ] **Step 4: Verify by hand**
@@ -2258,7 +2259,7 @@ The existing `Drawer` return stays as the mobile branch below this.
 
 - [ ] **Step 4: Verify build**
 
-Run: `npm run lint && npm run build`
+Run: `npm run lint && npx tsc -p tsconfig.app.json --noEmit && npm run build`
 Expected: both succeed.
 
 - [ ] **Step 5: Verify by hand**
