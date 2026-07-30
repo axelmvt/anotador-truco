@@ -198,6 +198,60 @@ describe("log del VAR", () => {
     expect(s.team1.points).toBe(0);
   });
 
+  it("deshacer el salto malas->buenas registra undoneType 'suma' y vuelve a {15, malas}", () => {
+    // points a secas bajaría de 1 a 15 acá: si jugadaRevertida comparara solo
+    // points en vez del total con fase, confundiría la dirección del cambio.
+    const s = run(createInitialState(30), inc("team1", 16)); // team1: {1, buenas}
+    const undone = gameReducer(s, { type: "undo", at: tick() });
+    const ultima = undone.log[undone.log.length - 1];
+    expect(ultima.type).toBe("deshacer");
+    expect(ultima.undoneType).toBe("suma");
+    expect(undone.team1).toEqual({ points: 15, stage: "malas" });
+  });
+
+  it("deshacer la resta buenas->malas registra undoneType 'resta'", () => {
+    const enBuenas = run(createInitialState(30), inc("team1", 16)); // {1, buenas}
+    const bajado = gameReducer(enBuenas, { type: "decrement", team: "team1", at: tick() }); // {15, malas}
+    const undone = gameReducer(bajado, { type: "undo", at: tick() });
+    const ultima = undone.log[undone.log.length - 1];
+    expect(ultima.type).toBe("deshacer");
+    expect(ultima.undoneType).toBe("resta");
+    expect(undone.team1).toEqual({ points: 1, stage: "buenas" });
+  });
+
+  it("un deshacer legítimo escribe entrada aunque su jugada haya sido expulsada del log", () => {
+    // 3 sumas reales, después ~100 ciclos de suma+deshacer inmediato sobre el
+    // mismo equipo. Cada ciclo neto no mueve el marcador ni `history` (empuja
+    // y desapila la misma snapshot), pero sí agrega 2 entradas al log. Con
+    // MAX_LOG=200, los 200 ciclos expulsan las 3 sumas originales del log,
+    // aunque siguen vivas en `history`. Un cuarto undo "real" (no pareado con
+    // ningún redo) tiene que poder reconstruir esa jugada igual, comparando
+    // el snapshot contra el estado actual en vez de escanear el log.
+    let s = run(createInitialState(30), inc("team1", 3)); // team1: {3, malas}
+    for (let i = 0; i < 100; i++) {
+      s = gameReducer(s, { type: "increment", team: "team1", at: tick() });
+      s = gameReducer(s, { type: "undo", at: tick() });
+    }
+    expect(s.team1).toEqual({ points: 3, stage: "malas" }); // los ciclos no movieron el marcador
+    expect(s.log).toHaveLength(MAX_LOG); // el log se llenó y recortó
+    expect(s.log.some((e) => e.points === 1 || e.points === 2)).toBe(false); // las sumas originales, expulsadas
+    const nextLogIdPrevio = s.nextLogId;
+
+    const atFinal = tick();
+    const final = gameReducer(s, { type: "undo", at: atFinal });
+    expect(final.team1).toEqual({ points: 2, stage: "malas" }); // el undo sí surtió efecto
+    // Estas dos aserciones son las que de verdad detectan el bug: si no se
+    // escribió nada, la última entrada sigue siendo la del último ciclo (un
+    // "deshacer" viejo, coincidentemente también de tipo "suma") con su
+    // timestamp e id de antes, no uno nuevo con `atFinal`.
+    expect(final.nextLogId).toBe(nextLogIdPrevio + 1);
+    const ultima = final.log[final.log.length - 1];
+    expect(ultima.at).toBe(atFinal);
+    expect(ultima.type).toBe("deshacer");
+    expect(ultima.undoneType).toBe("suma");
+    expect(ultima.team).toBe("team1");
+  });
+
   it("deshacer sin historial no toca el log", () => {
     const s = gameReducer(createInitialState(30), { type: "undo", at: 100 });
     expect(s.log).toHaveLength(0);
