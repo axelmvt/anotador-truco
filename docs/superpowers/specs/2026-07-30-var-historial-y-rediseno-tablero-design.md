@@ -160,6 +160,11 @@ La de arriba va después del header; la de abajo, como último hijo flex de la r
 
 **Costo:** el rediseño se lleva unos 22 px de alto del tablero. En un iPhone SE es medio cuadro de fósforos. Se mitiga bajando el header de `py-3 sm:py-4` a `pt-3 pb-0`: la banda ya aporta el aire de abajo.
 
+**La raya de abajo sigue al pie cuando se expande.** `MatchCounter` y `Footer` son hermanos dentro del `flex-col` de `Index.tsx`. Al expandirse el pie, el contenedor `flex-1` del tablero se achica y la raya —último hijo de `MatchCounter`— sube pegada al borde del pie. No hace falta código: es el layout flex haciendo su trabajo. Dos ajustes sí hacen falta:
+
+- **Sacar `border-t border-white/20` del `<footer>`** (`Footer.tsx:10`). Con la raya dorada encima quedarían dos líneas apiladas, una blanca de 1 px y una dorada de 4 px. La raya dorada pasa a ser el único separador.
+- **Animar la expansión del pie.** Hoy es un swap duro entre dos árboles JSX (`Footer.tsx:13`). Va con `grid-template-rows: 0fr → 1fr` y 260 ms, la misma técnica y duración que el desplegable de las tandas, para que el gesto se sienta igual en toda la app.
+
 ### Botón VAR
 
 Primero en la columna de FABs, arriba del engranaje. Hay que sacar el `mb-2` del botón de configuración para que la columna quede con `gap-3` parejo.
@@ -188,7 +193,12 @@ Todas con prefijo `motion-safe:`.
 | Overlay | 280 ms · `cubic-bezier(.4,0,.2,1)` |
 | Entrada escalonada de tarjetas | 240 ms · delay `i * 24 ms`, tope 260 ms |
 | Desplegar una tanda | 260 ms · `grid-template-rows: 0fr → 1fr` |
+| Expandir el pie | 260 ms · misma técnica que la tanda |
 | Thumb del tab | 260 ms |
+
+**Lo que ya anima y no hay que tocar:** el diálogo de Configuración usa el `Dialog` de shadcn, que ya trae `fade-in-0` + `zoom-in-95` + `slide-in-from-top-[48%]` a 200 ms vía `tailwindcss-animate`. El `Drawer` de vaul anima el transform de forma nativa y sigue el dedo al arrastrar.
+
+**Lo que falta:** el `DrawerOverlay` de `src/components/ui/drawer.tsx:29` es un `bg-black/80` sin transición — aparece de golpe mientras el panel sube. Hay que sumarle `data-[state=open]:animate-in data-[state=closed]:animate-out fade-in-0 fade-out-0` y bajarlo a `bg-black/[.66] backdrop-blur-[3px]`.
 
 Keyframes nuevos en `tailwind.config.ts`: `rule-draw`, `rule-draw-y`, `band-wipe`, `band-shine`, `stage-pop`, `fab-in`, `var-row-in`.
 
@@ -222,10 +232,11 @@ Vitest ya está configurado (`npm test`).
 | `src/components/icons/VarIcon.tsx` | nuevo |
 | `src/components/VarPanel.tsx` | nuevo |
 | `src/components/MatchCounter.tsx` | FAB VAR, banda de fase, rayas, `at` al despachar, persistir el log |
+| `src/components/Footer.tsx` | sacar `border-t`, animar la expansión |
+| `src/components/ui/drawer.tsx` | fade + blur en el overlay |
 | `tailwind.config.ts` | keyframes y animaciones nuevas, colores del panel |
 | `src/index.css` | red de seguridad de `prefers-reduced-motion` |
-
-`CLAUDE.md` quedó desactualizado en el pull (dice que no hay tests y menciona `AdBanner`, que ya se borró). Conviene corregirlo en el mismo trabajo.
+| `CLAUDE.md` | actualizar: decía que no hay tests y mencionaba `AdBanner`, borrado en `96580e1` |
 
 ## Distribución: qué pasa con quien ya instaló la PWA
 
