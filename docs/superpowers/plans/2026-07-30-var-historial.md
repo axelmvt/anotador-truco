@@ -19,6 +19,7 @@
 - **Nothing browser-only runs at import time.** Routes are prerendered by `vite-react-ssg`. `localStorage`, `window` and `navigator` may only be touched inside effects, event handlers, or code already under `<ClientOnly>`.
 - **Every animation is prefixed `motion-safe:`.**
 - **Colors come from `colors.truco` in `tailwind.config.ts`.** No new arbitrary hex in components except where the codebase already does it (`MatchSquare.tsx`).
+- **Two Tailwind classes compile to nothing here — avoid both.** Tailwind 3.4's opacity scale steps by 5, so `/12` (and any other off-scale value) silently yields no CSS; use `/15`. And `duration-*` / `ease-*` with arbitrary values are **ambiguous** with `tailwindcss-animate`, which registers the same prefixes for `animation-*` — Tailwind drops both candidates and warns only on the CLI, never in the Vite build. Write them as arbitrary properties instead: `[transition-duration:260ms]`, `[transition-timing-function:cubic-bezier(0.4,0,0.2,1)]`. Neither failure surfaces in lint, `tsc` or `npm run build`; the only way to catch them is to grep the compiled CSS in `dist/`.
 - **Team names are user-editable and may share an initial.** Never identify a team by the first letter of its name.
 - **Phase (Malas/Buenas) only exists in mode 30.** In mode 15 no phase UI renders at all.
 - `MAX_LOG = 200`, `UMBRAL_TANDA_MS = 120_000` (2 minutes), `MAX_HISTORY = 50` (unchanged).
@@ -1181,7 +1182,7 @@ const Separador = ({ children, hito = false }: { children: React.ReactNode; hito
     )}
   >
     <span>{children}</span>
-    <span className={cn("h-px flex-1", hito ? "bg-truco-stick/40" : "bg-truco-cream/12")} />
+    <span className={cn("h-px flex-1", hito ? "bg-truco-stick/40" : "bg-truco-cream/15")} />
   </div>
 );
 
@@ -1274,7 +1275,7 @@ const TarjetaTanda = ({
         <ChevronDown
           aria-hidden="true"
           className={cn(
-            "h-3.5 w-3.5 shrink-0 text-truco-cream/40 transition-transform duration-[260ms]",
+            "h-3.5 w-3.5 shrink-0 text-truco-cream/40 transition-transform [transition-duration:260ms]",
             abierta && "rotate-180"
           )}
         />
@@ -1283,7 +1284,7 @@ const TarjetaTanda = ({
       {/* grid 0fr→1fr: anima la altura sin conocerla de antemano */}
       <div
         className={cn(
-          "grid transition-[grid-template-rows] duration-[260ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
+          "grid transition-[grid-template-rows] [transition-duration:260ms] [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]",
           abierta ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
         )}
       >
@@ -1614,12 +1615,12 @@ Add the segmented control right below the header row (after the closing `</div>`
         <div
           role="tablist"
           aria-label="Vista del historial"
-          className="relative mx-4 mt-3 flex shrink-0 rounded-[11px] border border-truco-cream/12 bg-black/35 p-[3px]"
+          className="relative mx-4 mt-3 flex shrink-0 rounded-[11px] border border-truco-cream/15 bg-black/35 p-[3px]"
         >
           <span
             aria-hidden="true"
             className={cn(
-              "absolute inset-y-[3px] left-[3px] w-[calc(50%-3px)] rounded-lg bg-truco-stick transition-transform duration-[260ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
+              "absolute inset-y-[3px] left-[3px] w-[calc(50%-3px)] rounded-lg bg-truco-stick transition-transform [transition-duration:260ms] [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]",
               vista === "resumen" && "translate-x-full"
             )}
           />
@@ -1691,7 +1692,7 @@ Replace the scrollable body's children:
                     {reparto.t2} · {names.team2}
                   </span>
                 </div>
-                <div className="mt-3 flex justify-between border-t border-truco-cream/12 pt-2.5 font-mono text-[11px] text-truco-cream/40">
+                <div className="mt-3 flex justify-between border-t border-truco-cream/15 pt-2.5 font-mono text-[11px] text-truco-cream/40">
                   <span>
                     {log.length} movimientos
                     <br />
@@ -2056,7 +2057,7 @@ The mobile block currently swaps between two JSX trees with no transition. Repla
 
         <div
           className={cn(
-            "grid transition-[grid-template-rows] duration-[260ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
+            "grid transition-[grid-template-rows] [transition-duration:260ms] [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]",
             expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
           )}
         >
@@ -2241,7 +2242,7 @@ Wrap the return so the sheet is mobile-only and the dialog is the desktop path. 
               <div role="list" className="min-h-0 overflow-y-auto px-5 pb-5">
                 <ListaMovimientos filas={filas} />
               </div>
-              <div className="min-h-0 overflow-y-auto border-l border-truco-cream/12 bg-black/15 px-4 pb-5">
+              <div className="min-h-0 overflow-y-auto border-l border-truco-cream/15 bg-black/15 px-4 pb-5">
                 <p className="mb-3 mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-truco-cream/40">
                   Resumen
                 </p>
