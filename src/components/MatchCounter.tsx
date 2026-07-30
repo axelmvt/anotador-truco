@@ -48,17 +48,31 @@ const totalPoints = (team: TeamState, mode: GameMode): number =>
 
 // Descarta entradas corruptas de un log guardado por otra versión y recorta al
 // tope. Un log inválido no es un error: se arranca sin historial.
+// El array se trata como unknown[] (no any[]) para que el predicado esté
+// obligado a validar cada campo: Array.isArray por sí solo estrecha a any[],
+// y con any el compilador deja pasar un predicado incompleto sin reclamar.
 const sanearLog = (raw: unknown): LogEntry[] => {
   if (!Array.isArray(raw)) return [];
-  return raw
-    .filter(
-      (e): e is LogEntry =>
-        !!e &&
-        typeof e.at === "number" &&
-        typeof e.id === "string" &&
-        (e.team === "team1" || e.team === "team2") &&
-        (e.type === "suma" || e.type === "resta" || e.type === "deshacer")
-    )
+  return (raw as unknown[])
+    .filter((e): e is LogEntry => {
+      if (!e || typeof e !== "object") return false;
+      const entry = e as Record<string, unknown>;
+      const undoneTypeOk =
+        entry.undoneType === undefined ||
+        entry.undoneType === "suma" ||
+        entry.undoneType === "resta" ||
+        entry.undoneType === "deshacer";
+      return (
+        Number.isFinite(entry.at) &&
+        typeof entry.id === "string" &&
+        (entry.team === "team1" || entry.team === "team2") &&
+        (entry.type === "suma" || entry.type === "resta" || entry.type === "deshacer") &&
+        Number.isFinite(entry.delta) &&
+        Number.isFinite(entry.points) &&
+        (entry.stage === "malas" || entry.stage === "buenas") &&
+        undoneTypeOk
+      );
+    })
     .slice(-MAX_LOG);
 };
 
