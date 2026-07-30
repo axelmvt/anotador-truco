@@ -11,7 +11,7 @@ Junto con eso, cuatro cambios visuales en el tablero que salieron del mismo pedi
 
 ## Contexto: lo que ya existe
 
-El tablero vive entero en `src/components/MatchCounter.tsx`, sobre un reducer puro en `src/lib/gameReducer.ts` con 13 tests en Vitest. Ya hay persistencia en localStorage (`anotador-truco:partida`), deshacer, modos a 15 y a 30, nombres de equipo editables, sonido/vibración, wake lock y compartir.
+El tablero vive entero en `src/components/MatchCounter.tsx`, sobre un reducer puro en `src/lib/gameReducer.ts` con 18 tests en Vitest. Ya hay persistencia en localStorage (`anotador-truco:partida`), deshacer, modos a 15 y a 30, nombres de equipo editables, sonido/vibración, wake lock y compartir.
 
 `GameState` ya tiene un campo `history`, **que no sirve para el VAR**: es una pila de snapshots `{team1, team2}` para el deshacer, no dice qué equipo movió ni si fue suma o resta ni cuándo, el deshacer la desapila, y `MatchCounter.tsx` la descarta a propósito antes de guardar en localStorage. El VAR necesita su propia estructura.
 
@@ -62,7 +62,7 @@ export interface LogEntry {
 - **El timestamp entra por la acción.** `increment`, `decrement` y `undo` pasan a llevar `at: number`. `MatchCounter` lo completa con `Date.now()` al despachar.
 - **El id sale de un contador en el estado.** `nextLogId` se incrementa con cada entrada. Determinista, y da keys estables para React. Los ids son únicos **dentro de un log**; `reset` vuelve el contador a 1, así que una partida nueva arranca de `L1` otra vez. Alcanza: el log viejo ya no existe.
 
-Los 13 tests actuales usan los helpers `run()` e `inc()` de `gameReducer.test.ts`; ahí se inyecta un `at` fijo y creciente. Es un cambio en dos funciones, no en cada test.
+Los 18 tests actuales usan los helpers `run()` e `inc()` de `gameReducer.test.ts`; ahí se inyecta un `at` fijo y creciente. Es un cambio en dos funciones, no en cada test.
 
 ### Semántica por acción
 
