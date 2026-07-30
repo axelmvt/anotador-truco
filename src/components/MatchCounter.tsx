@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import VarIcon from "@/components/icons/VarIcon";
+import VarPanel from "@/components/VarPanel";
 import {
   Dialog,
   DialogContent,
@@ -498,6 +499,16 @@ const MatchCounter = () => {
           </div>
         </div>
       )}
+
+      <VarPanel
+        open={varOpen}
+        onOpenChange={setVarOpen}
+        log={state.log}
+        names={state.names}
+        mode={state.mode}
+        team1={state.team1}
+        team2={state.team2}
+      />
 
       {/* Panel de configuración: modo de partida y nombres */}
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
