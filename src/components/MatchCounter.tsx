@@ -18,6 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 import MatchSquare from './MatchSquare';
 import { primeAudio, playWin, playBuenas, vibrate } from "@/lib/feedback";
+import { lanzarConfites, cortarConfites } from "@/lib/confetti";
 import { useWakeLock } from "@/hooks/use-wake-lock";
 import {
   gameReducer,
@@ -249,9 +250,15 @@ const MatchCounter = () => {
         playWin();
         vibrate([100, 50, 100, 50, 250]);
       }
+      // Los confites no dependen de la preferencia de sonido: ese switch dice
+      // "Sonido y vibración" y no le corresponde apagar algo visual.
+      lanzarConfites();
     }
     prevWinner.current = state.winner;
   }, [state.winner, state.names, feedbackEnabled]);
+
+  // Si el componente se va a mitad de andanada, no dejamos timers colgados.
+  useEffect(() => cortarConfites, []);
 
   const incrementTeam = (team: Team) => {
     // Habilita el audio dentro de un gesto del usuario (lo necesita iOS).
@@ -285,6 +292,9 @@ const MatchCounter = () => {
     // El stage vuelve a "malas" ya mismo: si quedaba un destello vivo de la
     // partida anterior, se apaga junto con el reinicio.
     clearFlashes();
+    // Arrancar de cero con los confites de la partida anterior todavía
+    // cayendo queda raro.
+    cortarConfites();
     toast("Partida reiniciada", { position: "top-center" });
   };
 
