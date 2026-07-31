@@ -393,6 +393,9 @@ const MatchCounter = () => {
         ))}
       </div>
 
+      {/* Raya superior — cierra el marco contra el divisor vertical */}
+      <div className="h-1 w-full shrink-0 origin-center bg-truco-stick shadow-[0_0_10px_rgba(253,184,51,0.35)] motion-safe:animate-rule-draw" />
+
       {/* Game Board */}
       <div className="flex-1 overflow-hidden">
         <div className="h-full flex relative">
@@ -437,7 +440,7 @@ const MatchCounter = () => {
           </div>
 
           {/* Center divider */}
-          <div className="w-1 bg-truco-stick shadow-lg" />
+          <div className="w-1 origin-center bg-truco-stick shadow-lg motion-safe:animate-rule-draw-y" />
 
           {/* Team 2 Side */}
           <div
@@ -544,6 +547,10 @@ const MatchCounter = () => {
           </div>
         </div>
       </div>
+
+      {/* Raya inferior — al expandirse el pie, el flex-1 del tablero se achica y
+          esta raya sube pegada al borde del pie. No hace falta código. */}
+      <div className="h-1 w-full shrink-0 origin-center bg-truco-stick shadow-[0_0_10px_rgba(253,184,51,0.35)] motion-safe:animate-rule-draw" />
 
       {/* Overlay for game ended */}
       {gameEnded && (
