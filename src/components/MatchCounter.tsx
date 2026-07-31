@@ -481,7 +481,7 @@ const MatchCounter = () => {
                 variant="outline"
                 size="icon"
                 aria-label="VAR — revisar las jugadas"
-                className="h-12 w-12 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-transform duration-150 ease-out active:scale-[0.88] active:bg-black/25 motion-safe:animate-fab-in [&_svg]:size-7"
+                className="h-12 w-12 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-transform duration-150 ease-out active:scale-[0.88] active:bg-black/25 motion-safe:animate-fab-in [&_svg]:size-6"
                 onClick={(e) => {
                   e.stopPropagation();
                   setVarOpen(true);
