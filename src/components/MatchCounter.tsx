@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import VarIcon from "@/components/icons/VarIcon";
 import VarPanel from "@/components/VarPanel";
+import PhaseBand from "@/components/PhaseBand";
 import {
   Dialog,
   DialogContent,
@@ -116,6 +117,7 @@ const MatchCounter = () => {
   const [varOpen, setVarOpen] = useState(false);
   const [feedbackEnabled, setFeedbackEnabled] = useState(loadFeedbackPref);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+  const [flashTeam, setFlashTeam] = useState<Team | null>(null);
 
   // Evita que el teléfono apague la pantalla en medio de la partida.
   useWakeLock();
@@ -162,6 +164,7 @@ const MatchCounter = () => {
     (["team1", "team2"] as Team[]).forEach((t) => {
       if (prevStages.current[t] === "malas" && stages[t] === "buenas") {
         toast(`¡${names[t]} pasó a las buenas!`, { position: "top-center" });
+        setFlashTeam(t);
         if (feedbackEnabled) {
           playBuenas();
           vibrate(80);
@@ -262,10 +265,6 @@ const MatchCounter = () => {
     `${state.names.team2}: ${totalPoints(state.team2, state.mode)} puntos.` +
     (state.winner ? ` Ganó ${state.names[state.winner]}.` : "");
 
-  // El rótulo malas/buenas solo aplica al modo a 30.
-  const stageLabel = (team: Team) =>
-    state.mode === 30 ? (state[team].stage === "buenas" ? " (Buenas)" : " (Malas)") : "";
-
   return (
     <div className="h-full w-full flex flex-col relative">
       {/* Marcador para lectores de pantalla (los fósforos son visuales) */}
@@ -273,41 +272,55 @@ const MatchCounter = () => {
         {scoreAnnouncement}
       </div>
 
-      {/* Header - nombres de cada equipo + fase */}
-      <div className="flex justify-between items-center px-4 sm:px-6 py-3 sm:py-4 animate-fade-in">
+      {/* Header - nombres de cada equipo + banda de fase */}
+      <div className="flex shrink-0 animate-fade-in">
         {(["team1", "team2"] as Team[]).map((team) => (
-          <div key={team} className="w-1/2 flex justify-center min-w-0">
-            {editingTeam === team ? (
-              <input
-                autoFocus
-                value={state.names[team]}
-                maxLength={20}
-                aria-label="Editar nombre del equipo"
-                onChange={(e) => dispatch({ type: "setName", team, name: e.target.value })}
-                onBlur={() => finishEditing(team)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === "Escape") e.currentTarget.blur();
-                }}
-                className="w-full max-w-[12rem] bg-white/15 text-white text-center text-lg sm:text-xl md:text-2xl font-semibold rounded-md px-2 py-0.5 outline-none border border-white/40 focus:border-white/80"
-              />
-            ) : (
-              <button
-                type="button"
-                onClick={() => setEditingTeam(team)}
-                aria-label={`Editar nombre: ${state.names[team]}`}
-                className="group flex items-center gap-1.5 max-w-full px-1"
-              >
-                <h2
-                  className={cn(
-                    "text-lg sm:text-xl md:text-2xl font-semibold transition-all duration-300 text-center truncate",
-                    state[team].stage === "buenas" && state.mode === 30 ? "text-yellow-200" : "text-white"
-                  )}
+          <div key={team} className="flex w-1/2 min-w-0 flex-col">
+            <div className="flex min-w-0 justify-center px-2 pb-2 pt-3">
+              {editingTeam === team ? (
+                <input
+                  autoFocus
+                  value={state.names[team]}
+                  maxLength={20}
+                  aria-label="Editar nombre del equipo"
+                  onChange={(e) => dispatch({ type: "setName", team, name: e.target.value })}
+                  onBlur={() => finishEditing(team)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === "Escape") e.currentTarget.blur();
+                  }}
+                  className="w-full max-w-[12rem] rounded-md border border-white/40 bg-white/15 px-2 py-0.5 text-center text-lg font-semibold text-white outline-none focus:border-white/80 sm:text-xl md:text-2xl"
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setEditingTeam(team)}
+                  aria-label={`Editar nombre: ${state.names[team]}`}
+                  className="group flex max-w-full items-center gap-1.5 px-1"
                 >
-                  {state.names[team]}
-                  {stageLabel(team)}
-                </h2>
-                <Pencil className="h-4 w-4 shrink-0 text-white/50 group-hover:text-white/80 transition-colors" />
-              </button>
+                  <h2
+                    className={cn(
+                      "truncate text-center text-lg font-semibold transition-all duration-300 sm:text-xl md:text-2xl",
+                      state[team].stage === "buenas" && state.mode === 30
+                        ? "text-yellow-200"
+                        : "text-white",
+                      flashTeam === team && "motion-safe:animate-stage-pop"
+                    )}
+                  >
+                    {state.names[team]}
+                  </h2>
+                  <Pencil className="h-4 w-4 shrink-0 text-white/50 transition-colors group-hover:text-white/80" />
+                </button>
+              )}
+            </div>
+
+            {/* La fase solo existe en el modo a 30 */}
+            {state.mode === 30 && (
+              <PhaseBand
+                stage={state[team].stage}
+                side={team}
+                flash={flashTeam === team}
+                onFlashEnd={() => setFlashTeam(null)}
+              />
             )}
           </div>
         ))}
