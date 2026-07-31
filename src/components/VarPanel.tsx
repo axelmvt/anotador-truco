@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { X, Undo2, ChevronDown } from "lucide-react";
 import { Drawer, DrawerContent, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import VarIcon from "@/components/icons/VarIcon";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { agruparEnTandas, bucketDeTiempo, hitosDeBuenas, type Tanda } from "@/lib/varLog";
 import type { GameMode, LogEntry, Team, TeamState } from "@/lib/gameReducer";
 
@@ -322,8 +324,88 @@ const TarjetaResumen = ({
   </div>
 );
 
+// Vista de resumen: dos tarjetas por equipo más el reparto de la partida.
+// Se usa tanto en la vista alternable del bottom sheet (mobile) como en la
+// barra lateral fija del diálogo (desktop) — el JSX es idéntico en ambos
+// casos, solo cambia el contenedor que lo envuelve.
+const VistaResumen = ({
+  log,
+  names,
+  mode,
+  team1,
+  team2,
+  reparto,
+}: {
+  log: LogEntry[];
+  names: Record<Team, string>;
+  mode: GameMode;
+  team1: TeamState;
+  team2: TeamState;
+  reparto: { t1: number; t2: number; pct1: number; deshechos: number; minutos: number };
+}) => (
+  <div className="motion-safe:animate-var-row-in">
+    <TarjetaResumen
+      team="team1"
+      nombre={names.team1}
+      estado={team1}
+      stats={statsDe(log, "team1")}
+      mode={mode}
+    />
+    <TarjetaResumen
+      team="team2"
+      nombre={names.team2}
+      estado={team2}
+      stats={statsDe(log, "team2")}
+      mode={mode}
+    />
+    <div className="rounded-2xl bg-white/[0.055] p-3.5">
+      <div className="flex h-2 overflow-hidden rounded-full bg-black/30">
+        <span
+          className="block bg-truco-stick transition-[width] duration-500"
+          style={{ width: `${reparto.pct1}%` }}
+        />
+        <span
+          className="block bg-truco-head transition-[width] duration-500"
+          style={{ width: `${100 - reparto.pct1}%` }}
+        />
+      </div>
+      <div className="mt-2 flex justify-between font-mono text-[10px] text-truco-cream/40">
+        <span className="max-w-[45%] truncate">
+          {names.team1} · {reparto.t1}
+        </span>
+        <span className="max-w-[45%] truncate">
+          {reparto.t2} · {names.team2}
+        </span>
+      </div>
+      <div className="mt-3 flex justify-between border-t border-truco-cream/15 pt-2.5 font-mono text-[11px] text-truco-cream/40">
+        <span>
+          {log.length} movimientos
+          <br />
+          <span className="text-truco-cream/65">{reparto.deshechos} deshechos</span>
+        </span>
+        <span className="text-right">
+          {reparto.minutos} min de partida
+          <br />
+          <span className="text-truco-cream/65">
+            {hhmm(log[0].at)} – {hhmm(log[log.length - 1].at)}
+          </span>
+        </span>
+      </div>
+    </div>
+  </div>
+);
+
 const VarPanel = ({ open, onOpenChange, log, names, mode, team1, team2 }: VarPanelProps) => {
   const mostrarFase = mode === 30;
+  // `useIsMobile` ya devuelve un booleano (coerciona con `!!` internamente),
+  // pero en el primer render —antes de que corra su efecto— ese booleano es
+  // `false` sin importar el ancho real de la ventana. Como VarPanel se monta
+  // una sola vez y de entrada (ver MatchCounter), ese primer render ocurre
+  // con el panel cerrado y no se nota: el efecto ya corrigió el valor mucho
+  // antes de que el usuario llegue a abrirlo. De todos modos tratamos
+  // cualquier valor que no sea estrictamente `true` como desktop, tal como
+  // pide la tarea, así que un futuro cambio en el hook no nos rompe.
+  const isMobile = useIsMobile();
   const [vista, setVista] = useState<"movimientos" | "resumen">("movimientos");
   // Refs a los dos botones del tablist, para mover el foco junto con la
   // selección (patrón APG de Tabs: foco y selección viajan juntos).
@@ -390,6 +472,51 @@ const VarPanel = ({ open, onOpenChange, log, names, mode, team1, team2 }: VarPan
       );
     }
   });
+
+  // Arriba de md el bottom sheet se reemplaza por un diálogo centrado a dos
+  // columnas: la lista a la izquierda y el Resumen como barra lateral fija
+  // (no hay tabs acá, no es una vista alternable). `isMobile !== true` se
+  // trata como desktop a propósito (ver comentario junto a `useIsMobile`).
+  if (isMobile !== true) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-3xl gap-0 border-truco-stick/35 border-t-2 border-t-truco-stick bg-truco-sheet p-0 text-truco-cream">
+          <DialogHeader className="shrink-0 flex-row items-center gap-2.5 space-y-0 px-5 pb-3 pt-5">
+            <DialogTitle className="text-[19px] font-extrabold tracking-wide text-truco-cream">
+              HISTORIAL
+            </DialogTitle>
+            <span className="rounded bg-truco-head px-1.5 py-1 font-mono text-[10px] font-extrabold tracking-widest text-white">
+              VAR
+            </span>
+            <span className="font-mono text-[11.5px] text-truco-cream/40">
+              {log.length} {log.length === 1 ? "jugada" : "jugadas"}
+            </span>
+          </DialogHeader>
+          <DialogDescription className="sr-only">
+            Historial de solo lectura de los puntos sumados, restados y deshechos en la partida.
+          </DialogDescription>
+
+          {log.length === 0 ? (
+            <div className="h-[380px]">
+              <Vacio onClose={() => onOpenChange(false)} />
+            </div>
+          ) : (
+            <div className="grid h-[440px] grid-cols-[1fr_300px]">
+              <div role="list" className="min-h-0 overflow-y-auto px-5 pb-5">
+                {filas}
+              </div>
+              <div className="min-h-0 overflow-y-auto border-l border-truco-cream/15 bg-black/15 px-4 pb-5">
+                <p className="mb-3 mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-truco-cream/40">
+                  Resumen
+                </p>
+                <VistaResumen {...{ log, names, mode, team1, team2, reparto }} />
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} shouldScaleBackground={false}>
@@ -482,56 +609,7 @@ const VarPanel = ({ open, onOpenChange, log, names, mode, team1, team2 }: VarPan
           ) : vista === "movimientos" ? (
             filas
           ) : (
-            <div className="motion-safe:animate-var-row-in">
-              <TarjetaResumen
-                team="team1"
-                nombre={names.team1}
-                estado={team1}
-                stats={statsDe(log, "team1")}
-                mode={mode}
-              />
-              <TarjetaResumen
-                team="team2"
-                nombre={names.team2}
-                estado={team2}
-                stats={statsDe(log, "team2")}
-                mode={mode}
-              />
-              <div className="rounded-2xl bg-white/[0.055] p-3.5">
-                <div className="flex h-2 overflow-hidden rounded-full bg-black/30">
-                  <span
-                    className="block bg-truco-stick transition-[width] duration-500"
-                    style={{ width: `${reparto.pct1}%` }}
-                  />
-                  <span
-                    className="block bg-truco-head transition-[width] duration-500"
-                    style={{ width: `${100 - reparto.pct1}%` }}
-                  />
-                </div>
-                <div className="mt-2 flex justify-between font-mono text-[10px] text-truco-cream/40">
-                  <span className="max-w-[45%] truncate">
-                    {names.team1} · {reparto.t1}
-                  </span>
-                  <span className="max-w-[45%] truncate">
-                    {reparto.t2} · {names.team2}
-                  </span>
-                </div>
-                <div className="mt-3 flex justify-between border-t border-truco-cream/15 pt-2.5 font-mono text-[11px] text-truco-cream/40">
-                  <span>
-                    {log.length} movimientos
-                    <br />
-                    <span className="text-truco-cream/65">{reparto.deshechos} deshechos</span>
-                  </span>
-                  <span className="text-right">
-                    {reparto.minutos} min de partida
-                    <br />
-                    <span className="text-truco-cream/65">
-                      {hhmm(log[0].at)} – {hhmm(log[log.length - 1].at)}
-                    </span>
-                  </span>
-                </div>
-              </div>
-            </div>
+            <VistaResumen {...{ log, names, mode, team1, team2, reparto }} />
           )}
         </div>
       </DrawerContent>
