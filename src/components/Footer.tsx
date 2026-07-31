@@ -1,18 +1,38 @@
 import React, { useState } from "react";
 import { Github } from "lucide-react";
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   const [expanded, setExpanded] = useState(false);
   
   return (
-    <footer className="w-full bg-truco-green py-2 px-3 border-t border-white/20 text-white text-xs">
+    <footer className="w-full bg-truco-green py-2 px-3 text-white text-xs">
       {/* Versión móvil colapsada */}
       <div className="md:hidden">
-        {expanded ? (
-          <>
-            <div className="grid grid-cols-2 gap-3">
+        <div className="flex items-center justify-between">
+          <p className="text-white/80 text-xs">
+            © {currentYear} Anotador de Truco
+          </p>
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            aria-expanded={expanded}
+            className="text-white/60 text-xs"
+          >
+            {expanded ? "Mostrar menos ↑" : "Más info ↓"}
+          </button>
+        </div>
+
+        <div
+          className={cn(
+            "grid transition-[grid-template-rows] [transition-duration:260ms] [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]",
+            expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+          )}
+        >
+          <div className="overflow-hidden">
+            <div className="grid grid-cols-2 gap-3 pt-2">
               <div className="mb-2">
                 <h3 className="font-semibold text-sm mb-1">Sobre el Truco</h3>
                 <ul className="space-y-1 text-white/80">
@@ -23,15 +43,15 @@ const Footer = () => {
                   <li><Link to="/blog" className="hover:text-white">Blog sobre Truco</Link></li>
                 </ul>
               </div>
-              
+
               <div>
                 <h3 className="font-semibold text-sm mb-1">Enlaces útiles</h3>
                 <ul className="space-y-1 text-white/80">
                   <li>
-                    <a 
-                      href="https://github.com/axelmvt/anotador-truco" 
-                      className="flex items-center hover:text-white" 
-                      target="_blank" 
+                    <a
+                      href="https://github.com/axelmvt/anotador-truco"
+                      className="flex items-center hover:text-white"
+                      target="_blank"
                       rel="noopener noreferrer"
                     >
                       <Github className="h-3 w-3 mr-1" />
@@ -42,31 +62,10 @@ const Footer = () => {
                 </ul>
               </div>
             </div>
-            
-            <button 
-              onClick={() => setExpanded(false)}
-              className="w-full text-center mt-2 py-1 text-white/60 text-xs"
-            >
-              Mostrar menos ↑
-            </button>
-          </>
-        ) : (
-          <div className="flex flex-col">
-            <div className="flex justify-between items-center">
-              <p className="text-white/80 text-xs">
-                © {currentYear} Anotador de Truco
-              </p>
-              <button 
-                onClick={() => setExpanded(true)}
-                className="text-white/60 text-xs"
-              >
-                Más info ↓
-              </button>
-            </div>
           </div>
-        )}
+        </div>
       </div>
-      
+
       {/* Versión desktop completa */}
       <div className="hidden md:block max-w-7xl mx-auto">
         <div className="grid grid-cols-3 gap-4">
