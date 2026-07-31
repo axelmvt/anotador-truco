@@ -21,9 +21,16 @@ const PhaseBand = ({ stage, side, flash }: PhaseBandProps) => {
         // Costura de verde alineada con el divisor: sin esto las dos bandas se
         // leen como una sola barra cuando ambos equipos están en la misma fase.
         side === "team1" ? "border-r-2 border-truco-green" : "border-l-2 border-truco-green",
+        // Colores de texto elegidos por contraste real (WCAG, compuesto sobre
+        // el fondo efectivo de la banda + el verde de la cancha), no a ojo:
+        // text-white/60 y text-truco-stick sólido daban ~3.3:1 los dos, muy
+        // por debajo de 4.5:1 (texto de 10px, no entra en el mínimo relajado
+        // de "texto grande"). text-white/80 sobre bg-white/[0.06] da 4.56:1;
+        // text-yellow-200 sobre bg-truco-stick/15 da 4.94:1 y mantiene la
+        // familia de color del nombre en buenas (mismo text-yellow-200).
         buenas
-          ? "bg-truco-stick/15 text-truco-stick shadow-[inset_0_-2px_0_0_#FDB833]"
-          : "bg-white/[0.06] text-white/60"
+          ? "bg-truco-stick/15 text-yellow-200 shadow-[inset_0_-2px_0_0_#FDB833]"
+          : "bg-white/[0.06] text-white/80"
       )}
     >
       {flash && (
