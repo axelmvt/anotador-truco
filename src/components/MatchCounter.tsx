@@ -1,4 +1,4 @@
-import { useReducer, useEffect, useRef, useState } from 'react';
+import { useReducer, useEffect, useRef, useState, useCallback } from 'react';
 import { toast } from "sonner";
 import { Settings, RefreshCcw, Undo2, Share2, Pencil, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -117,7 +117,18 @@ const MatchCounter = () => {
   const [varOpen, setVarOpen] = useState(false);
   const [feedbackEnabled, setFeedbackEnabled] = useState(loadFeedbackPref);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
-  const [flashTeam, setFlashTeam] = useState<Team | null>(null);
+  // Destello por equipo (no un único valor compartido): si los dos cruzan a
+  // buenas casi juntos, el destello de uno no puede pisar el del otro.
+  const [flashTeams, setFlashTeams] = useState<Record<Team, boolean>>({
+    team1: false,
+    team2: false,
+  });
+  // Ids de los timeouts que apagan cada destello, en un ref porque no
+  // disparan render por sí mismos: solo sirven para poder cancelarlos.
+  const flashTimers = useRef<Record<Team, ReturnType<typeof setTimeout> | undefined>>({
+    team1: undefined,
+    team2: undefined,
+  });
 
   // Evita que el teléfono apague la pantalla en medio de la partida.
   useWakeLock();
@@ -154,6 +165,58 @@ const MatchCounter = () => {
     }
   }, [state]);
 
+  // Prende el destello de UN equipo y lo apaga por reloj, no por el evento de
+  // animación: con `prefers-reduced-motion: reduce` las clases
+  // `motion-safe:animate-*` nunca se aplican, así que `onAnimationEnd` no
+  // dispara jamás y el destello quedaría pegado para siempre (el brillo
+  // blanco quedaba congelado sobre la banda). El barrido dura 420ms y el
+  // brillo 900ms con 120ms de demora (1020ms en total): 1100ms cubre ambos
+  // con margen sin importar qué modo de movimiento esté activo.
+  // Cancela el timer anterior del MISMO equipo antes de armar uno nuevo (si
+  // el mismo equipo volviera a disparar el flash), pero no toca el timer del
+  // otro: cada equipo tiene su propia entrada en `flashTimers`, así que dos
+  // cruces casi simultáneos no se cortan entre sí.
+  const triggerFlash = useCallback((team: Team) => {
+    if (flashTimers.current[team] !== undefined) {
+      clearTimeout(flashTimers.current[team]);
+    }
+    setFlashTeams((prev) => ({ ...prev, [team]: true }));
+    flashTimers.current[team] = setTimeout(() => {
+      setFlashTeams((prev) => ({ ...prev, [team]: false }));
+      flashTimers.current[team] = undefined;
+    }, 1100);
+  }, []);
+
+  // Apaga los dos destellos de inmediato y cancela sus timers, sin esperar a
+  // que se apaguen solos. Hace falta al reiniciar la partida o cambiar de
+  // modo: ahí el stage vuelve a "malas" de golpe, y si el timer del destello
+  // seguía vivo, el barrido/brillo dorado se veía pasando sobre una banda que
+  // ya dice "Malas".
+  const clearFlashes = useCallback(() => {
+    (Object.keys(flashTimers.current) as Team[]).forEach((t) => {
+      if (flashTimers.current[t] !== undefined) {
+        clearTimeout(flashTimers.current[t]);
+        flashTimers.current[t] = undefined;
+      }
+    });
+    setFlashTeams({ team1: false, team2: false });
+  }, []);
+
+  // Al desmontar, cancela cualquier timer vivo para no actualizar el estado
+  // de un componente que ya no existe. Se copia `flashTimers.current` a una
+  // variable local dentro del efecto: es el mismo objeto durante toda la vida
+  // del componente (solo se mutan sus claves, nunca se reasigna), pero la
+  // cleanup debe cerrar sobre esa referencia capturada y no releer `.current`
+  // en el momento del desmontaje.
+  useEffect(() => {
+    const timers = flashTimers.current;
+    return () => {
+      (Object.values(timers) as (ReturnType<typeof setTimeout> | undefined)[]).forEach((id) => {
+        if (id !== undefined) clearTimeout(id);
+      });
+    };
+  }, []);
+
   // Avisa cuando un equipo pasa a las buenas (solo en modo a 30).
   const t1Stage = state.team1.stage;
   const t2Stage = state.team2.stage;
@@ -164,7 +227,7 @@ const MatchCounter = () => {
     (["team1", "team2"] as Team[]).forEach((t) => {
       if (prevStages.current[t] === "malas" && stages[t] === "buenas") {
         toast(`¡${names[t]} pasó a las buenas!`, { position: "top-center" });
-        setFlashTeam(t);
+        triggerFlash(t);
         if (feedbackEnabled) {
           playBuenas();
           vibrate(80);
@@ -172,22 +235,7 @@ const MatchCounter = () => {
       }
     });
     prevStages.current = stages;
-  }, [t1Stage, t2Stage, names, feedbackEnabled]);
-
-  // Apaga el destello por reloj, no por el evento de animación: con
-  // `prefers-reduced-motion: reduce` las clases `motion-safe:animate-*` nunca
-  // se aplican, así que `onAnimationEnd` no dispara jamás y `flashTeam`
-  // quedaría pegado para siempre (el brillo blanco quedaba congelado sobre la
-  // banda). El barrido dura 420ms y el brillo 900ms con 120ms de demora
-  // (1020ms en total): 1100ms cubre ambos con margen sin importar qué modo de
-  // movimiento esté activo. Si dos equipos cruzan a buenas casi juntos, el
-  // timer viejo no debe apagar el destello nuevo: por eso se limpia en el
-  // cleanup del efecto.
-  useEffect(() => {
-    if (flashTeam === null) return;
-    const timer = setTimeout(() => setFlashTeam(null), 1100);
-    return () => clearTimeout(timer);
-  }, [flashTeam]);
+  }, [t1Stage, t2Stage, names, feedbackEnabled, triggerFlash]);
 
   // Avisa el ganador una sola vez (no se re-dispara al recargar una partida ya cerrada).
   const prevWinner = useRef(state.winner);
@@ -234,12 +282,17 @@ const MatchCounter = () => {
 
   const resetGame = () => {
     dispatch({ type: "reset" });
+    // El stage vuelve a "malas" ya mismo: si quedaba un destello vivo de la
+    // partida anterior, se apaga junto con el reinicio.
+    clearFlashes();
     toast("Partida reiniciada", { position: "top-center" });
   };
 
   const changeMode = (mode: GameMode) => {
     if (mode === state.mode) return;
     dispatch({ type: "setMode", mode });
+    // Cambiar de modo también reinicia la partida: mismo motivo que en resetGame.
+    clearFlashes();
     toast(`Modo cambiado: a ${mode}. Partida reiniciada.`, { position: "top-center" });
   };
 
@@ -318,7 +371,7 @@ const MatchCounter = () => {
                       state[team].stage === "buenas" && state.mode === 30
                         ? "text-yellow-200"
                         : "text-white",
-                      flashTeam === team && "motion-safe:animate-stage-pop"
+                      flashTeams[team] && "motion-safe:animate-stage-pop"
                     )}
                   >
                     {state.names[team]}
@@ -333,7 +386,7 @@ const MatchCounter = () => {
               <PhaseBand
                 stage={state[team].stage}
                 side={team}
-                flash={flashTeam === team}
+                flash={flashTeams[team]}
               />
             )}
           </div>

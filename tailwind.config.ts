@@ -169,7 +169,7 @@ export default {
 				'rule-draw': 'rule-draw 0.52s cubic-bezier(0.22, 1, 0.36, 1) both',
 				'rule-draw-y': 'rule-draw-y 0.52s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both',
 				'band-wipe': 'band-wipe 0.42s cubic-bezier(0.65, 0, 0.35, 1) forwards',
-				'band-shine': 'band-shine 0.9s ease-out 0.12s 1',
+				'band-shine': 'band-shine 0.9s ease-out 0.12s 1 forwards',
 				'stage-pop': 'stage-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)',
 				'fab-in': 'fab-in 0.26s cubic-bezier(0.34, 1.56, 0.64, 1) both',
 				'var-row-in': 'var-row-in 0.24s cubic-bezier(0.4, 0, 0.2, 1) both'
