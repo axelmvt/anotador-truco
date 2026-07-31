@@ -3,7 +3,6 @@ import { X, Undo2, ChevronDown } from "lucide-react";
 import { Drawer, DrawerContent, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import VarIcon from "@/components/icons/VarIcon";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { agruparEnTandas, bucketDeTiempo, hitosDeBuenas, type Tanda } from "@/lib/varLog";
 import type { GameMode, LogEntry, Team, TeamState } from "@/lib/gameReducer";

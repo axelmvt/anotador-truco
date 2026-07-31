@@ -471,18 +471,23 @@ const MatchCounter = () => {
             )}
             {/* Control buttons for Team 2 */}
             <div className="absolute right-2 bottom-2 flex flex-col gap-3 items-end z-30">
-              {/* Botón VAR — primero en la columna, arriba del engranaje */}
+              {/* Botón VAR — primero en la columna, arriba del engranaje.
+                  El `[&_svg]:size-7` no es decorativo: la variante base de
+                  Button trae `[&_svg]:size-4` y, por ser un selector de
+                  descendiente, le gana a cualquier alto o ancho puesto en el
+                  ícono. Sin ese override el recuadro queda en 16px y las tres
+                  letras de adentro no se leen. */}
               <Button
                 variant="outline"
                 size="icon"
                 aria-label="VAR — revisar las jugadas"
-                className="h-12 w-12 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-transform duration-150 ease-out active:scale-[0.88] active:bg-black/25 motion-safe:animate-fab-in"
+                className="h-12 w-12 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-transform duration-150 ease-out active:scale-[0.88] active:bg-black/25 motion-safe:animate-fab-in [&_svg]:size-7"
                 onClick={(e) => {
                   e.stopPropagation();
                   setVarOpen(true);
                 }}
               >
-                <VarIcon className="h-6 w-6" />
+                <VarIcon />
               </Button>
 
               {/* Settings Button */}
