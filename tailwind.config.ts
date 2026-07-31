@@ -1,6 +1,11 @@
 import type { Config } from "tailwindcss";
 
 export default {
+	// En pantallas tactiles el navegador deja el `:hover` pegado despues de
+	// tocar, asi que los botones quedaban oscurecidos hasta que tocabas otra
+	// cosa. Esto encierra todas las utilidades `hover:` en `@media (hover:
+	// hover)`, que es el comportamiento por defecto de Tailwind 4.
+	future: { hoverOnlyWhenSupported: true },
 	darkMode: ["class"],
 	content: [
 		"./pages/**/*.{ts,tsx}",
