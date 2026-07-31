@@ -6,12 +6,11 @@ interface PhaseBandProps {
   side: Team;
   /** Dispara el barrido y el brillo al pasar de malas a buenas. */
   flash: boolean;
-  onFlashEnd: () => void;
 }
 
 // Banda de fase debajo del nombre. Teñida al 15 %, no dorado macizo: el oro
 // pleno compite con los fósforos, que son el corazón visual del tablero.
-const PhaseBand = ({ stage, side, flash, onFlashEnd }: PhaseBandProps) => {
+const PhaseBand = ({ stage, side, flash }: PhaseBandProps) => {
   const buenas = stage === "buenas";
 
   return (
@@ -35,7 +34,6 @@ const PhaseBand = ({ stage, side, flash, onFlashEnd }: PhaseBandProps) => {
           />
           <span
             aria-hidden="true"
-            onAnimationEnd={onFlashEnd}
             className="pointer-events-none absolute inset-y-0 left-0 z-20 w-[38%] bg-gradient-to-r from-transparent via-white/55 to-transparent motion-safe:animate-band-shine"
           />
         </>

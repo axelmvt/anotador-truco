@@ -174,6 +174,21 @@ const MatchCounter = () => {
     prevStages.current = stages;
   }, [t1Stage, t2Stage, names, feedbackEnabled]);
 
+  // Apaga el destello por reloj, no por el evento de animación: con
+  // `prefers-reduced-motion: reduce` las clases `motion-safe:animate-*` nunca
+  // se aplican, así que `onAnimationEnd` no dispara jamás y `flashTeam`
+  // quedaría pegado para siempre (el brillo blanco quedaba congelado sobre la
+  // banda). El barrido dura 420ms y el brillo 900ms con 120ms de demora
+  // (1020ms en total): 1100ms cubre ambos con margen sin importar qué modo de
+  // movimiento esté activo. Si dos equipos cruzan a buenas casi juntos, el
+  // timer viejo no debe apagar el destello nuevo: por eso se limpia en el
+  // cleanup del efecto.
+  useEffect(() => {
+    if (flashTeam === null) return;
+    const timer = setTimeout(() => setFlashTeam(null), 1100);
+    return () => clearTimeout(timer);
+  }, [flashTeam]);
+
   // Avisa el ganador una sola vez (no se re-dispara al recargar una partida ya cerrada).
   const prevWinner = useRef(state.winner);
   useEffect(() => {
@@ -319,7 +334,6 @@ const MatchCounter = () => {
                 stage={state[team].stage}
                 side={team}
                 flash={flashTeam === team}
-                onFlashEnd={() => setFlashTeam(null)}
               />
             )}
           </div>
