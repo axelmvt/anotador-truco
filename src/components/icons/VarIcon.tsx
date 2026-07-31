@@ -11,10 +11,10 @@ const VarIcon = (props: React.SVGProps<SVGSVGElement>) => (
     aria-hidden="true"
     {...props}
   >
-    <rect x="3" y="7" width="26" height="18" rx="4.5" strokeWidth={2.2} />
-    <path d="M7 12l2.2 8 2.2-8" />
-    <path d="M13.8 20l2.2-8 2.2 8M14.6 17.2h2.8" />
-    <path d="M20.6 20v-8h2.4a2.1 2.1 0 0 1 0 4.2h-2.4M22.3 16.2 25 20" />
+    <rect x="1.5" y="5" width="29" height="22" rx="5" strokeWidth={2.2} />
+    <path d="M5 10.5 7.6 21.5 10.2 10.5" />
+    <path d="M12.2 21.5 15 10.5 17.8 21.5M13.3 17.6h3.4" />
+    <path d="M20 21.5v-11h3.2a2.9 2.9 0 0 1 0 5.8H20M22.9 16.3 26.4 21.5" />
   </svg>
 );
 
