@@ -1766,7 +1766,9 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 
 **Interfaces:**
 - Consumes: `animate-band-wipe`, `animate-band-shine`, `animate-stage-pop` from Task 4
-- Produces: default export `PhaseBand` with props `{ stage: Stage; side: Team; flash: boolean; onFlashEnd: () => void }`
+- Produces: default export `PhaseBand` with props `{ stage: Stage; side: Team; flash: boolean }`
+
+**The flash must be cleared by a timer, not by `onAnimationEnd`.** `motion-safe:` does not shorten an animation under `prefers-reduced-motion: reduce` — it stops the class from applying at all, so no animation runs and `animationend` never fires. An `onAnimationEnd` handler would leave `flashTeam` set forever and the white highlight overlay frozen on the band. Task 4's global reduced-motion CSS does not save this: it shortens animations that *are* applied, it cannot resurrect an event for one that never existed. Clear the flash from a `useEffect` on a `setTimeout` instead, in both motion modes.
 
 - [ ] **Step 1: Create the band**
 
@@ -1781,12 +1783,11 @@ interface PhaseBandProps {
   side: Team;
   /** Dispara el barrido y el brillo al pasar de malas a buenas. */
   flash: boolean;
-  onFlashEnd: () => void;
 }
 
 // Banda de fase debajo del nombre. Teñida al 15 %, no dorado macizo: el oro
 // pleno compite con los fósforos, que son el corazón visual del tablero.
-const PhaseBand = ({ stage, side, flash, onFlashEnd }: PhaseBandProps) => {
+const PhaseBand = ({ stage, side, flash }: PhaseBandProps) => {
   const buenas = stage === "buenas";
 
   return (
@@ -1810,7 +1811,6 @@ const PhaseBand = ({ stage, side, flash, onFlashEnd }: PhaseBandProps) => {
           />
           <span
             aria-hidden="true"
-            onAnimationEnd={onFlashEnd}
             className="pointer-events-none absolute inset-y-0 left-0 z-20 w-[38%] bg-gradient-to-r from-transparent via-white/55 to-transparent motion-safe:animate-band-shine"
           />
         </>
@@ -1909,7 +1909,6 @@ Replace the header JSX with:
                 stage={state[team].stage}
                 side={team}
                 flash={flashTeam === team}
-                onFlashEnd={() => setFlashTeam(null)}
               />
             )}
           </div>
