@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { X, Undo2, ChevronDown } from "lucide-react";
 import { Drawer, DrawerContent, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
@@ -229,8 +229,12 @@ interface Stats {
   total: number;
 }
 
-// Cuenta por equipo. La mejor racha son sumas consecutivas sin que el rival
-// anote en el medio; los deshacer no cortan la racha, solo corrigen.
+// Cuenta por equipo. La mejor racha son sumas propias consecutivas sin que el
+// rival anote en el medio. Dos cosas NO cortan la racha, a propósito:
+// - los deshacer, que solo corrigen, no son una jugada del rival;
+// - una resta del propio equipo, que se asume corrección de un toque de más
+//   (no que el rival haya anotado). Por eso tiene su propia rama abajo, que
+//   no hace nada: se deja explícita para que no se lea como un olvido.
 const statsDe = (log: LogEntry[], team: Team): Stats => {
   const propias = log.filter((e) => e.team === team);
   let mejorRacha = 0;
@@ -240,6 +244,9 @@ const statsDe = (log: LogEntry[], team: Team): Stats => {
     if (e.team === team && e.type === "suma") {
       actual += 1;
       mejorRacha = Math.max(mejorRacha, actual);
+    } else if (e.team === team && e.type === "resta") {
+      // No-op intencional: una resta propia no corta la racha (ver comentario
+      // de arriba). `actual` queda como está.
     } else if (e.team !== team) {
       actual = 0;
     }
@@ -318,6 +325,12 @@ const TarjetaResumen = ({
 const VarPanel = ({ open, onOpenChange, log, names, mode, team1, team2 }: VarPanelProps) => {
   const mostrarFase = mode === 30;
   const [vista, setVista] = useState<"movimientos" | "resumen">("movimientos");
+  // Refs a los dos botones del tablist, para mover el foco junto con la
+  // selección (patrón APG de Tabs: foco y selección viajan juntos).
+  const tabRefs = useRef<Record<"movimientos" | "resumen", HTMLButtonElement | null>>({
+    movimientos: null,
+    resumen: null,
+  });
 
   // El "ahora" se fija al abrir: si se recalculara en cada render, los
   // separadores de tiempo saltarían mientras el panel está abierto.
@@ -424,14 +437,26 @@ const VarPanel = ({ open, onOpenChange, log, names, mode, team1, team2 }: VarPan
           {(["movimientos", "resumen"] as const).map((v) => (
             <button
               key={v}
+              ref={(el) => {
+                tabRefs.current[v] = el;
+              }}
               type="button"
               role="tab"
               aria-selected={vista === v}
+              tabIndex={vista === v ? 0 : -1}
               onClick={() => setVista(v)}
               onKeyDown={(e) => {
                 if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
                   e.preventDefault();
-                  setVista(vista === "movimientos" ? "resumen" : "movimientos");
+                  // Con exactamente 2 tabs, "anterior" y "siguiente" circulares
+                  // son el mismo elemento: no hace falta mirar qué flecha fue.
+                  const siguiente = vista === "movimientos" ? "resumen" : "movimientos";
+                  setVista(siguiente);
+                  // Roving tabindex: el foco tiene que seguir a la selección,
+                  // no quedarse en el botón que dejó de estar activo. El botón
+                  // ya existe en el DOM (ambos tabs están siempre montados), así
+                  // que no hace falta esperar al re-render para enfocarlo.
+                  tabRefs.current[siguiente]?.focus();
                 }
               }}
               className={cn(
