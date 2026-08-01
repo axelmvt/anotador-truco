@@ -302,7 +302,10 @@ const MatchCounter = () => {
     if (mode === state.mode) return;
     dispatch({ type: "setMode", mode });
     // Cambiar de modo también reinicia la partida: mismo motivo que en resetGame.
+    // Se llega hasta acá con confites en el aire — el engranaje queda por
+    // encima del cartel de ganador — así que también hay que cortarlos.
     clearFlashes();
+    cortarConfites();
     toast(`Modo cambiado: a ${mode}. Partida reiniciada.`, { position: "top-center" });
   };
 
@@ -482,7 +485,7 @@ const MatchCounter = () => {
             {/* Control buttons for Team 2 */}
             <div className="absolute right-2 bottom-2 flex flex-col gap-3 items-end z-30">
               {/* Botón VAR — primero en la columna, arriba del engranaje.
-                  El `[&_svg]:size-7` no es decorativo: la variante base de
+                  El `[&_svg]:size-6` no es decorativo: la variante base de
                   Button trae `[&_svg]:size-4` y, por ser un selector de
                   descendiente, le gana a cualquier alto o ancho puesto en el
                   ícono. Sin ese override el recuadro queda en 16px y las tres
