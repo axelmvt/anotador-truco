@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { X, Undo2, ChevronDown } from "lucide-react";
 import { Drawer, DrawerContent, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -53,7 +53,7 @@ const Separador = ({ children, hito = false }: { children: React.ReactNode; hito
     role="presentation"
     className={cn(
       "mt-3.5 mb-2 flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] first:mt-0.5",
-      hito ? "text-truco-stick" : "text-truco-cream/40"
+      hito ? "text-truco-stick" : "text-truco-cream/55"
     )}
   >
     <span>{children}</span>
@@ -63,15 +63,15 @@ const Separador = ({ children, hito = false }: { children: React.ReactNode; hito
 
 const FilaDeshacer = ({ t, nombre }: { t: Tanda; nombre: string }) => (
   <div className="mb-1.5 flex items-center gap-2 rounded-[10px] border border-dashed border-truco-cream/20 px-2.5 py-2 opacity-75">
-    <Undo2 className="h-3.5 w-3.5 shrink-0 text-truco-cream/40" />
+    <Undo2 className="h-3.5 w-3.5 shrink-0 text-truco-cream/55" />
     <span className="min-w-0 text-[12.5px] italic leading-tight text-truco-cream/65">
       Se deshizo{" "}
-      <span className="font-mono not-italic line-through text-truco-cream/40">
+      <span className="font-mono not-italic line-through text-truco-cream/55">
         {t.undoneType === "suma" ? "+1" : "−1"}
       </span>{" "}
       de {nombre} · queda en {t.points}
     </span>
-    <span className="ml-auto shrink-0 font-mono text-[11px] tabular-nums text-truco-cream/40">
+    <span className="ml-auto shrink-0 font-mono text-[11px] tabular-nums text-truco-cream/55">
       {hhmm(t.hasta)}
     </span>
   </div>
@@ -145,7 +145,7 @@ const TarjetaTanda = ({
           {mostrarFase && (
             <span
               title={fase}
-              className="rounded border border-truco-cream/15 px-1 py-0.5 text-[9.5px] tracking-wider text-truco-cream/45"
+              className="rounded border border-truco-cream/15 px-1 py-0.5 text-[9.5px] tracking-wider text-truco-cream/55"
             >
               {fase.slice(0, 1)}
             </span>
@@ -154,7 +154,7 @@ const TarjetaTanda = ({
         <ChevronDown
           aria-hidden="true"
           className={cn(
-            "h-3.5 w-3.5 shrink-0 text-truco-cream/40 transition-transform [transition-duration:260ms]",
+            "h-3.5 w-3.5 shrink-0 text-truco-cream/55 transition-transform [transition-duration:260ms]",
             abierta && "rotate-180"
           )}
         />
@@ -183,10 +183,10 @@ const TarjetaTanda = ({
                 <span className={x.delta < 0 ? "text-truco-headSoft" : "text-truco-cream"}>
                   {x.delta > 0 ? "+1" : "−1"}
                 </span>
-                <span className="text-truco-cream/40">→</span>
+                <span className="text-truco-cream/55">→</span>
                 <span>{x.points}</span>
                 {mostrarFase && (
-                  <span className="text-truco-cream/40">
+                  <span className="text-truco-cream/55">
                     {x.stage === "buenas" ? "Buenas" : "Malas"}
                   </span>
                 )}
@@ -293,7 +293,7 @@ const TarjetaResumen = ({
           {puntosTotales(estado, mode)}
         </span>
         {mode === 30 && (
-          <span className="font-mono text-[9.5px] uppercase tracking-widest text-truco-cream/40">
+          <span className="font-mono text-[9.5px] uppercase tracking-widest text-truco-cream/55">
             {estado.stage === "buenas" ? "Buenas" : "Malas"}
           </span>
         )}
@@ -314,7 +314,7 @@ const TarjetaResumen = ({
           >
             {n}
           </span>
-          <span className="mt-1.5 block font-mono text-[9px] uppercase tracking-widest text-truco-cream/40">
+          <span className="mt-1.5 block font-mono text-[9px] uppercase tracking-widest text-truco-cream/55">
             {k}
           </span>
         </div>
@@ -368,7 +368,7 @@ const VistaResumen = ({
           style={{ width: `${100 - reparto.pct1}%` }}
         />
       </div>
-      <div className="mt-2 flex justify-between font-mono text-[10px] text-truco-cream/40">
+      <div className="mt-2 flex justify-between font-mono text-[10px] text-truco-cream/55">
         <span className="max-w-[45%] truncate">
           {names.team1} · {reparto.t1}
         </span>
@@ -376,7 +376,7 @@ const VistaResumen = ({
           {reparto.t2} · {names.team2}
         </span>
       </div>
-      <div className="mt-3 flex justify-between border-t border-truco-cream/15 pt-2.5 font-mono text-[11px] text-truco-cream/40">
+      <div className="mt-3 flex justify-between border-t border-truco-cream/15 pt-2.5 font-mono text-[11px] text-truco-cream/55">
         <span>
           {log.length} movimientos
           <br />
@@ -415,10 +415,20 @@ const VarPanel = ({ open, onOpenChange, log, names, mode, team1, team2 }: VarPan
 
   // El "ahora" se fija al abrir: si se recalculara en cada render, los
   // separadores de tiempo saltarían mientras el panel está abierto.
+  //
+  // Se recalcula DURANTE el render y no en un `useEffect`. Con el efecto había
+  // un commit intermedio con el `ahora` del montaje: si la app venía abierta un
+  // rato, ese valor es anterior a las jugadas, `ahora - at` da negativo y todas
+  // las filas caen en "Recién". No pudimos reproducir ese estado en pantalla
+  // —React vacía los efectos pasivos antes de que el navegador pinte, así que
+  // en la práctica no se llega a ver— pero asignar el estado en el render lo
+  // vuelve imposible por construcción y ahorra el render de más.
   const [ahora, setAhora] = useState(() => Date.now());
-  useEffect(() => {
+  const estabaAbierta = useRef(open);
+  if (open !== estabaAbierta.current) {
+    estabaAbierta.current = open;
     if (open) setAhora(Date.now());
-  }, [open]);
+  }
 
   const tandas = useMemo(() => agruparEnTandas(log).reverse(), [log]);
   const hitos = useMemo(() => hitosDeBuenas(log, mode), [log, mode]);
@@ -487,7 +497,7 @@ const VarPanel = ({ open, onOpenChange, log, names, mode, team1, team2 }: VarPan
             <span className="rounded bg-truco-head px-1.5 py-1 font-mono text-[10px] font-extrabold tracking-widest text-white">
               VAR
             </span>
-            <span className="font-mono text-[11.5px] text-truco-cream/40">
+            <span className="font-mono text-[11.5px] text-truco-cream/55">
               {log.length} {log.length === 1 ? "jugada" : "jugadas"}
             </span>
           </DialogHeader>
@@ -505,7 +515,7 @@ const VarPanel = ({ open, onOpenChange, log, names, mode, team1, team2 }: VarPan
                 {filas}
               </div>
               <div className="min-h-0 overflow-y-auto border-l border-truco-cream/15 bg-black/15 px-4 pb-5">
-                <p className="mb-3 mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-truco-cream/40">
+                <p className="mb-3 mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-truco-cream/55">
                   Resumen
                 </p>
                 <VistaResumen {...{ log, names, mode, team1, team2, reparto }} />
@@ -535,7 +545,7 @@ const VarPanel = ({ open, onOpenChange, log, names, mode, team1, team2 }: VarPan
           <span className="rounded bg-truco-head px-1.5 py-1 font-mono text-[10px] font-extrabold tracking-widest text-white">
             VAR
           </span>
-          <span className="font-mono text-[11.5px] text-truco-cream/40">
+          <span className="font-mono text-[11.5px] text-truco-cream/55">
             {log.length} {log.length === 1 ? "jugada" : "jugadas"}
           </span>
           <button
