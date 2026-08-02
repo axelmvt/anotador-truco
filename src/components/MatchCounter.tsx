@@ -1,10 +1,13 @@
-import { useReducer, useEffect, useRef, useState } from 'react';
+import { useReducer, useEffect, useRef, useState, useCallback } from 'react';
 import { toast } from "sonner";
 import { Settings, RefreshCcw, Undo2, Share2, Pencil, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import VarIcon from "@/components/icons/VarIcon";
+import VarPanel from "@/components/VarPanel";
+import PhaseBand from "@/components/PhaseBand";
 import {
   Dialog,
   DialogContent,
@@ -15,16 +18,19 @@ import {
 import { cn } from "@/lib/utils";
 import MatchSquare from './MatchSquare';
 import { primeAudio, playWin, playBuenas, vibrate } from "@/lib/feedback";
+import { lanzarConfites, cortarConfites } from "@/lib/confetti";
 import { useWakeLock } from "@/hooks/use-wake-lock";
 import {
   gameReducer,
   createInitialState,
   getSquaresForTeam,
   DEFAULT_NAMES,
+  MAX_LOG,
   type GameState,
   type GameMode,
   type Team,
   type TeamState,
+  type LogEntry,
 } from "@/lib/gameReducer";
 
 const STORAGE_KEY = "anotador-truco:partida";
@@ -44,6 +50,41 @@ const loadFeedbackPref = (): boolean => {
 const totalPoints = (team: TeamState, mode: GameMode): number =>
   mode === 30 && team.stage === "buenas" ? 15 + team.points : team.points;
 
+// Descarta entradas corruptas de un log guardado por otra versión y recorta al
+// tope. Un log inválido no es un error: se arranca sin historial.
+// El array se trata como unknown[] (no any[]) para que el predicado esté
+// obligado a validar cada campo: Array.isArray por sí solo estrecha a any[],
+// y con any el compilador deja pasar un predicado incompleto sin reclamar.
+const sanearLog = (raw: unknown): LogEntry[] => {
+  if (!Array.isArray(raw)) return [];
+  return (raw as unknown[])
+    .filter((e): e is LogEntry => {
+      if (!e || typeof e !== "object") return false;
+      const entry = e as Record<string, unknown>;
+      const undoneTypeOk =
+        entry.undoneType === undefined ||
+        entry.undoneType === "suma" ||
+        entry.undoneType === "resta" ||
+        entry.undoneType === "deshacer";
+      return (
+        Number.isFinite(entry.at) &&
+        typeof entry.id === "string" &&
+        (entry.team === "team1" || entry.team === "team2") &&
+        (entry.type === "suma" || entry.type === "resta" || entry.type === "deshacer") &&
+        Number.isFinite(entry.delta) &&
+        Number.isFinite(entry.points) &&
+        (entry.stage === "malas" || entry.stage === "buenas") &&
+        undoneTypeOk
+      );
+    })
+    .slice(-MAX_LOG);
+};
+
+// El contador se recalcula del log en vez de confiar en lo guardado: así dos
+// entradas nunca comparten id aunque el valor almacenado esté mal.
+const siguienteLogId = (log: LogEntry[]): number =>
+  log.reduce((max, e) => Math.max(max, Number(e.id.replace(/^L/, "")) || 0), 0) + 1;
+
 // Lee la partida guardada y la normaliza; cae al estado inicial si no hay datos
 // válidos o si localStorage no está disponible.
 const loadSavedGame = (): GameState => {
@@ -52,6 +93,7 @@ const loadSavedGame = (): GameState => {
     if (!raw) return createInitialState();
     const p = JSON.parse(raw);
     if (!p?.team1 || !p?.team2) return createInitialState();
+    const log = sanearLog(p.log);
     return {
       mode: p.mode === 15 ? 15 : 30,
       names: {
@@ -62,6 +104,8 @@ const loadSavedGame = (): GameState => {
       team2: p.team2,
       winner: p.winner ?? null,
       history: [],
+      log,
+      nextLogId: siguienteLogId(log),
     };
   } catch {
     return createInitialState();
@@ -71,8 +115,21 @@ const loadSavedGame = (): GameState => {
 const MatchCounter = () => {
   const [state, dispatch] = useReducer(gameReducer, undefined, loadSavedGame);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [varOpen, setVarOpen] = useState(false);
   const [feedbackEnabled, setFeedbackEnabled] = useState(loadFeedbackPref);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+  // Destello por equipo (no un único valor compartido): si los dos cruzan a
+  // buenas casi juntos, el destello de uno no puede pisar el del otro.
+  const [flashTeams, setFlashTeams] = useState<Record<Team, boolean>>({
+    team1: false,
+    team2: false,
+  });
+  // Ids de los timeouts que apagan cada destello, en un ref porque no
+  // disparan render por sí mismos: solo sirven para poder cancelarlos.
+  const flashTimers = useRef<Record<Team, ReturnType<typeof setTimeout> | undefined>>({
+    team1: undefined,
+    team2: undefined,
+  });
 
   // Evita que el teléfono apague la pantalla en medio de la partida.
   useWakeLock();
@@ -96,17 +153,70 @@ const MatchCounter = () => {
     }
   }, [feedbackEnabled]);
 
-  // Persiste la partida (sin el historial) en cada cambio para no perderla al
-  // refrescar o bloquear el teléfono.
+  // Persiste la partida (sin la pila de deshacer, y sin el contador de ids que
+  // se recalcula al leer) en cada cambio, para no perderla al refrescar.
   useEffect(() => {
     try {
-      const { history, ...persistable } = state;
+      const { history, nextLogId, ...persistable } = state;
       void history;
+      void nextLogId;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(persistable));
     } catch {
       // localStorage no disponible (modo privado / cuota llena): se ignora
     }
   }, [state]);
+
+  // Prende el destello de UN equipo y lo apaga por reloj, no por el evento de
+  // animación: con `prefers-reduced-motion: reduce` las clases
+  // `motion-safe:animate-*` nunca se aplican, así que `onAnimationEnd` no
+  // dispara jamás y el destello quedaría pegado para siempre (el brillo
+  // blanco quedaba congelado sobre la banda). El barrido dura 420ms y el
+  // brillo 900ms con 120ms de demora (1020ms en total): 1100ms cubre ambos
+  // con margen sin importar qué modo de movimiento esté activo.
+  // Cancela el timer anterior del MISMO equipo antes de armar uno nuevo (si
+  // el mismo equipo volviera a disparar el flash), pero no toca el timer del
+  // otro: cada equipo tiene su propia entrada en `flashTimers`, así que dos
+  // cruces casi simultáneos no se cortan entre sí.
+  const triggerFlash = useCallback((team: Team) => {
+    if (flashTimers.current[team] !== undefined) {
+      clearTimeout(flashTimers.current[team]);
+    }
+    setFlashTeams((prev) => ({ ...prev, [team]: true }));
+    flashTimers.current[team] = setTimeout(() => {
+      setFlashTeams((prev) => ({ ...prev, [team]: false }));
+      flashTimers.current[team] = undefined;
+    }, 1100);
+  }, []);
+
+  // Apaga los dos destellos de inmediato y cancela sus timers, sin esperar a
+  // que se apaguen solos. Hace falta al reiniciar la partida o cambiar de
+  // modo: ahí el stage vuelve a "malas" de golpe, y si el timer del destello
+  // seguía vivo, el barrido/brillo dorado se veía pasando sobre una banda que
+  // ya dice "Malas".
+  const clearFlashes = useCallback(() => {
+    (Object.keys(flashTimers.current) as Team[]).forEach((t) => {
+      if (flashTimers.current[t] !== undefined) {
+        clearTimeout(flashTimers.current[t]);
+        flashTimers.current[t] = undefined;
+      }
+    });
+    setFlashTeams({ team1: false, team2: false });
+  }, []);
+
+  // Al desmontar, cancela cualquier timer vivo para no actualizar el estado
+  // de un componente que ya no existe. Se copia `flashTimers.current` a una
+  // variable local dentro del efecto: es el mismo objeto durante toda la vida
+  // del componente (solo se mutan sus claves, nunca se reasigna), pero la
+  // cleanup debe cerrar sobre esa referencia capturada y no releer `.current`
+  // en el momento del desmontaje.
+  useEffect(() => {
+    const timers = flashTimers.current;
+    return () => {
+      (Object.values(timers) as (ReturnType<typeof setTimeout> | undefined)[]).forEach((id) => {
+        if (id !== undefined) clearTimeout(id);
+      });
+    };
+  }, []);
 
   // Avisa cuando un equipo pasa a las buenas (solo en modo a 30).
   const t1Stage = state.team1.stage;
@@ -118,6 +228,7 @@ const MatchCounter = () => {
     (["team1", "team2"] as Team[]).forEach((t) => {
       if (prevStages.current[t] === "malas" && stages[t] === "buenas") {
         toast(`¡${names[t]} pasó a las buenas!`, { position: "top-center" });
+        triggerFlash(t);
         if (feedbackEnabled) {
           playBuenas();
           vibrate(80);
@@ -125,7 +236,7 @@ const MatchCounter = () => {
       }
     });
     prevStages.current = stages;
-  }, [t1Stage, t2Stage, names, feedbackEnabled]);
+  }, [t1Stage, t2Stage, names, feedbackEnabled, triggerFlash]);
 
   // Avisa el ganador una sola vez (no se re-dispara al recargar una partida ya cerrada).
   const prevWinner = useRef(state.winner);
@@ -139,9 +250,15 @@ const MatchCounter = () => {
         playWin();
         vibrate([100, 50, 100, 50, 250]);
       }
+      // Los confites no dependen de la preferencia de sonido: ese switch dice
+      // "Sonido y vibración" y no le corresponde apagar algo visual.
+      lanzarConfites();
     }
     prevWinner.current = state.winner;
   }, [state.winner, state.names, feedbackEnabled]);
+
+  // Si el componente se va a mitad de andanada, no dejamos timers colgados.
+  useEffect(() => cortarConfites, []);
 
   const incrementTeam = (team: Team) => {
     // Habilita el audio dentro de un gesto del usuario (lo necesita iOS).
@@ -150,7 +267,7 @@ const MatchCounter = () => {
       toast("La partida ha terminado. Reiniciá para jugar de nuevo.", { position: "top-center" });
       return;
     }
-    dispatch({ type: "increment", team });
+    dispatch({ type: "increment", team, at: Date.now() });
   };
 
   const decrementTeam = (team: Team) => {
@@ -158,7 +275,7 @@ const MatchCounter = () => {
       toast("La partida ha terminado. Reiniciá para jugar de nuevo.", { position: "top-center" });
       return;
     }
-    dispatch({ type: "decrement", team });
+    dispatch({ type: "decrement", team, at: Date.now() });
   };
 
   const undo = () => {
@@ -166,18 +283,29 @@ const MatchCounter = () => {
       toast("No hay jugadas para deshacer", { position: "top-center" });
       return;
     }
-    dispatch({ type: "undo" });
+    dispatch({ type: "undo", at: Date.now() });
     toast("Jugada deshecha", { position: "top-center" });
   };
 
   const resetGame = () => {
     dispatch({ type: "reset" });
+    // El stage vuelve a "malas" ya mismo: si quedaba un destello vivo de la
+    // partida anterior, se apaga junto con el reinicio.
+    clearFlashes();
+    // Arrancar de cero con los confites de la partida anterior todavía
+    // cayendo queda raro.
+    cortarConfites();
     toast("Partida reiniciada", { position: "top-center" });
   };
 
   const changeMode = (mode: GameMode) => {
     if (mode === state.mode) return;
     dispatch({ type: "setMode", mode });
+    // Cambiar de modo también reinicia la partida: mismo motivo que en resetGame.
+    // Se llega hasta acá con confites en el aire — el engranaje queda por
+    // encima del cartel de ganador — así que también hay que cortarlos.
+    clearFlashes();
+    cortarConfites();
     toast(`Modo cambiado: a ${mode}. Partida reiniciada.`, { position: "top-center" });
   };
 
@@ -218,10 +346,6 @@ const MatchCounter = () => {
     `${state.names.team2}: ${totalPoints(state.team2, state.mode)} puntos.` +
     (state.winner ? ` Ganó ${state.names[state.winner]}.` : "");
 
-  // El rótulo malas/buenas solo aplica al modo a 30.
-  const stageLabel = (team: Team) =>
-    state.mode === 30 ? (state[team].stage === "buenas" ? " (Buenas)" : " (Malas)") : "";
-
   return (
     <div className="h-full w-full flex flex-col relative">
       {/* Marcador para lectores de pantalla (los fósforos son visuales) */}
@@ -229,45 +353,61 @@ const MatchCounter = () => {
         {scoreAnnouncement}
       </div>
 
-      {/* Header - nombres de cada equipo + fase */}
-      <div className="flex justify-between items-center px-4 sm:px-6 py-3 sm:py-4 animate-fade-in">
+      {/* Header - nombres de cada equipo + banda de fase */}
+      <div className="flex shrink-0 animate-fade-in">
         {(["team1", "team2"] as Team[]).map((team) => (
-          <div key={team} className="w-1/2 flex justify-center min-w-0">
-            {editingTeam === team ? (
-              <input
-                autoFocus
-                value={state.names[team]}
-                maxLength={20}
-                aria-label="Editar nombre del equipo"
-                onChange={(e) => dispatch({ type: "setName", team, name: e.target.value })}
-                onBlur={() => finishEditing(team)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === "Escape") e.currentTarget.blur();
-                }}
-                className="w-full max-w-[12rem] bg-white/15 text-white text-center text-lg sm:text-xl md:text-2xl font-semibold rounded-md px-2 py-0.5 outline-none border border-white/40 focus:border-white/80"
-              />
-            ) : (
-              <button
-                type="button"
-                onClick={() => setEditingTeam(team)}
-                aria-label={`Editar nombre: ${state.names[team]}`}
-                className="group flex items-center gap-1.5 max-w-full px-1"
-              >
-                <h2
-                  className={cn(
-                    "text-lg sm:text-xl md:text-2xl font-semibold transition-all duration-300 text-center truncate",
-                    state[team].stage === "buenas" && state.mode === 30 ? "text-yellow-200" : "text-white"
-                  )}
+          <div key={team} className="flex w-1/2 min-w-0 flex-col">
+            <div className="flex min-w-0 justify-center px-2 pb-2 pt-3">
+              {editingTeam === team ? (
+                <input
+                  autoFocus
+                  value={state.names[team]}
+                  maxLength={20}
+                  aria-label="Editar nombre del equipo"
+                  onChange={(e) => dispatch({ type: "setName", team, name: e.target.value })}
+                  onBlur={() => finishEditing(team)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === "Escape") e.currentTarget.blur();
+                  }}
+                  className="w-full max-w-[12rem] rounded-md border border-white/40 bg-white/15 px-2 py-0.5 text-center text-lg font-semibold text-white outline-none focus:border-white/80 sm:text-xl md:text-2xl"
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setEditingTeam(team)}
+                  aria-label={`Editar nombre: ${state.names[team]}`}
+                  className="group flex max-w-full items-center gap-1.5 px-1"
                 >
-                  {state.names[team]}
-                  {stageLabel(team)}
-                </h2>
-                <Pencil className="h-4 w-4 shrink-0 text-white/50 group-hover:text-white/80 transition-colors" />
-              </button>
+                  <h2
+                    className={cn(
+                      "truncate text-center text-lg font-semibold transition-all duration-300 sm:text-xl md:text-2xl",
+                      state[team].stage === "buenas" && state.mode === 30
+                        ? "text-yellow-200"
+                        : "text-white",
+                      flashTeams[team] && "motion-safe:animate-stage-pop"
+                    )}
+                  >
+                    {state.names[team]}
+                  </h2>
+                  <Pencil className="h-4 w-4 shrink-0 text-white/50 transition-colors group-hover:text-white/80" />
+                </button>
+              )}
+            </div>
+
+            {/* La fase solo existe en el modo a 30 */}
+            {state.mode === 30 && (
+              <PhaseBand
+                stage={state[team].stage}
+                side={team}
+                flash={flashTeams[team]}
+              />
             )}
           </div>
         ))}
       </div>
+
+      {/* Raya superior — cierra el marco contra el divisor vertical */}
+      <div className="h-1 w-full shrink-0 origin-center bg-truco-stick shadow-[0_0_10px_rgba(253,184,51,0.35)] motion-safe:animate-rule-draw" />
 
       {/* Game Board */}
       <div className="flex-1 overflow-hidden">
@@ -302,7 +442,7 @@ const MatchCounter = () => {
             <button
               type="button"
               aria-label={`Restar punto a ${state.names.team1}`}
-              className="absolute bottom-2 left-2 h-12 w-12 flex items-center justify-center bg-black/10 hover:bg-black/20 rounded-full z-10 transition-all"
+              className="absolute bottom-2 left-2 h-12 w-12 flex items-center justify-center bg-black/10 hover:bg-black/20 rounded-full z-10 transition-transform duration-150 ease-out active:scale-[0.88] active:bg-black/25"
               onClick={(e) => {
                 e.stopPropagation();
                 decrementTeam("team1");
@@ -313,7 +453,7 @@ const MatchCounter = () => {
           </div>
 
           {/* Center divider */}
-          <div className="w-1 bg-truco-stick shadow-lg" />
+          <div className="w-1 origin-center bg-truco-stick shadow-lg motion-safe:animate-rule-draw-y" />
 
           {/* Team 2 Side */}
           <div
@@ -344,12 +484,31 @@ const MatchCounter = () => {
             )}
             {/* Control buttons for Team 2 */}
             <div className="absolute right-2 bottom-2 flex flex-col gap-3 items-end z-30">
+              {/* Botón VAR — primero en la columna, arriba del engranaje.
+                  El `[&_svg]:size-6` no es decorativo: la variante base de
+                  Button trae `[&_svg]:size-4` y, por ser un selector de
+                  descendiente, le gana a cualquier alto o ancho puesto en el
+                  ícono. Sin ese override el recuadro queda en 16px y las tres
+                  letras de adentro no se leen. */}
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="VAR — revisar las jugadas"
+                className="h-12 w-12 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-transform duration-150 ease-out active:scale-[0.88] active:bg-black/25 motion-safe:animate-fab-in [&_svg]:size-6"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setVarOpen(true);
+                }}
+              >
+                <VarIcon />
+              </Button>
+
               {/* Settings Button */}
               <Button
                 variant="outline"
                 size="icon"
                 aria-label="Configuración"
-                className="h-12 w-12 mb-2 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-all"
+                className="h-12 w-12 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-transform duration-150 ease-out active:scale-[0.88] active:bg-black/25"
                 onClick={(e) => {
                   e.stopPropagation();
                   setSettingsOpen(true);
@@ -364,7 +523,7 @@ const MatchCounter = () => {
                   variant="outline"
                   size="icon"
                   aria-label="Deshacer última jugada"
-                  className="h-12 w-12 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-all animate-fade-in"
+                  className="h-12 w-12 rounded-full bg-black/10 border-none text-white hover:bg-black/20 transition-transform duration-150 ease-out active:scale-[0.88] active:bg-black/25 animate-fade-in"
                   onClick={(e) => {
                     e.stopPropagation();
                     undo();
@@ -380,7 +539,7 @@ const MatchCounter = () => {
                   variant="outline"
                   size="icon"
                   aria-label="Reiniciar partida"
-                  className="h-12 w-12 rounded-full bg-red-500/60 hover:bg-red-500/80 border-none text-white scale-110 transition-all animate-fade-in z-50"
+                  className="h-12 w-12 rounded-full bg-red-500/60 hover:bg-red-500/80 border-none text-white scale-110 transition-transform duration-150 ease-out active:scale-[0.88] active:bg-red-500/90 animate-fade-in z-50"
                   onClick={(e) => {
                     e.stopPropagation();
                     resetGame();
@@ -394,7 +553,7 @@ const MatchCounter = () => {
               <button
                 type="button"
                 aria-label={`Restar punto a ${state.names.team2}`}
-                className="h-12 w-12 flex items-center justify-center rounded-full bg-black/10 hover:bg-black/20 transition-all"
+                className="h-12 w-12 flex items-center justify-center rounded-full bg-black/10 hover:bg-black/20 transition-transform duration-150 ease-out active:scale-[0.88] active:bg-black/25"
                 onClick={(e) => {
                   e.stopPropagation();
                   decrementTeam("team2");
@@ -406,6 +565,10 @@ const MatchCounter = () => {
           </div>
         </div>
       </div>
+
+      {/* Raya inferior — al expandirse el pie, el flex-1 del tablero se achica y
+          esta raya sube pegada al borde del pie. No hace falta código. */}
+      <div className="h-1 w-full shrink-0 origin-center bg-truco-stick shadow-[0_0_10px_rgba(253,184,51,0.35)] motion-safe:animate-rule-draw" />
 
       {/* Overlay for game ended */}
       {gameEnded && (
@@ -441,6 +604,16 @@ const MatchCounter = () => {
           </div>
         </div>
       )}
+
+      <VarPanel
+        open={varOpen}
+        onOpenChange={setVarOpen}
+        log={state.log}
+        names={state.names}
+        mode={state.mode}
+        team1={state.team1}
+        team2={state.team2}
+      />
 
       {/* Panel de configuración: modo de partida y nombres */}
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
