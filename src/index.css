@@ -97,9 +97,22 @@ body {
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(8px);
   }
-  
+
   .shadow-soft {
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05),
                 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Red de seguridad: motion-safe: cubre las animaciones nuevas, pero no las
+   transition-* sueltas ni el animate-match-manual que ya existía. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
